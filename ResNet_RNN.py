@@ -221,13 +221,125 @@ class IMU_bl(nn.Module):
         return torch.mean((pred - target) ** 2)
 
 
+class ov_model(nn.Module):
+    def __init__(self, block, layers, image_channels, num_classes, normalization = False,ACTIVATED_F = "T"):
+        super(ov_model, self).__init__()
+        self.in_channels = 64
+        self.conv1 = nn.Conv2d(image_channels, 64, kernel_size=7, stride=2, padding=3, bias=False)
+        self.bn1 = nn.BatchNorm2d(64)
+        self.relu = nn.ReLU()
+        self.norm = normalization
+        if ACTIVATED_F == "L":
+            self.act_f = nn.LeakyReLU()
+        else:
+            self.act_f = nn.Tanh()
 
+        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        self.rnn = nn.LSTM(input_size =7, hidden_size=256, num_layers=1)
+
+        # Essentially the entire ResNet architecture are in these 4 lines below
+        self.layer1 = self._make_layer(
+            block, layers[0], intermediate_channels=64, stride=1
+        )
+        self.layer2 = self._make_layer(
+            block, layers[1], intermediate_channels=128, stride=2
+        )
+        self.layer3 = self._make_layer(
+            block, layers[2], intermediate_channels=256, stride=2
+        )
+        self.layer4 = self._make_layer(
+            block, layers[3], intermediate_channels=512, stride=2
+        )
+
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+
+        self.fc0 = nn.Linear(512 * 4, 256 * 4)
+        self.fc1 = nn.Linear(256 * 4, 512)
+        self.fc2 = nn.Linear(512, 256)
+
+
+        self.fc3 = nn.Linear(256, 128)
+        self.fc4 = nn.Linear(128, 32)
+        self.fc5 = nn.Linear(32, num_classes)
+
+
+    def forward(self, x_IMG):
+
+        if self.norm == True:
+            x_IMG = x_IMG*2-1
+        x = self.conv1(x_IMG)
+        x = self.bn1(x)
+        x = self.relu(x)
+        x = self.maxpool(x)
+        x = self.layer1(x)
+        x = self.layer2(x)
+        x = self.layer3(x)
+        x = self.layer4(x)
+
+        x = self.avgpool(x)
+        x = x.reshape(x.shape[0], -1)
+        x = self.act_f(self.fc0(x))
+        x = self.act_f(self.fc1(x))
+        x = self.act_f(self.fc2(x))
+
+        x = torch.cat(5*[x.unsqueeze(0)])
+
+
+        l_x = torch.transpose(x, 0, 2)
+        x, _ = self.rnn(l_x)
+        x = x[-1]
+
+        x = self.act_f(self.fc3(x))
+        x = self.fc4(x)
+        x = self.fc5(x)
+        return x
+
+
+    def loss(self, pred, target):
+        return torch.mean((pred - target) ** 2)
+
+    def _make_layer(self, block, num_residual_blocks, intermediate_channels, stride):
+        identity_downsample = None
+        layers = []
+
+        # Either if we half the input space for ex, 56x56 -> 28x28 (stride=2), or channels changes
+        # we need to adapt the Identity (skip connection) so it will be able to be added
+        # to the layer that's ahead
+        if stride != 1 or self.in_channels != intermediate_channels * 4:
+            identity_downsample = nn.Sequential(
+                nn.Conv2d(
+                    self.in_channels,
+                    intermediate_channels * 4,
+                    kernel_size=1,
+                    stride=stride,
+                    bias=False
+                ),
+                nn.BatchNorm2d(intermediate_channels * 4),
+            )
+
+        layers.append(
+            block(self.in_channels, intermediate_channels, identity_downsample, stride)
+        )
+
+        # The expansion size is always 4 for ResNet 50,101,152
+        self.in_channels = intermediate_channels * 4
+
+        # For example for first resnet layer: 256 will be mapped to 64 as intermediate layer,
+        # then finally back to 256. Hence no identity downsample is needed, since stride = 1,
+        # and also same amount of channels.
+        for i in range(num_residual_blocks - 1):
+            layers.append(block(self.in_channels, intermediate_channels))
+
+        return nn.Sequential(*layers)
 
 def ResNet18(ACTIVATED_F,img_channel=3, num_classes=6, input_pre_a = False,normalization = True):
     return ResNet(block, [2, 2, 2, 2], img_channel, num_classes,input_pre_a = input_pre_a,normalization = normalization,ACTIVATED_F = ACTIVATED_F)
 
 def ResNet50(ACTIVATED_F,img_channel=3, num_classes=6, input_pre_a = False,normalization = True):
     return ResNet(block, [3, 4, 6, 3], img_channel, num_classes,input_pre_a = input_pre_a,normalization = normalization,ACTIVATED_F = ACTIVATED_F)
+
+def OV_Net(ACTIVATED_F,img_channel=3, num_classes=6, normalization = True):
+    return ov_model(block, [3, 4, 6, 3], img_channel, num_classes,normalization = normalization,ACTIVATED_F = ACTIVATED_F)
 
 
 def ResNet101(ACTIVATED_F,img_channel=3, num_classes=6, input_pre_a = False,normalization = True):

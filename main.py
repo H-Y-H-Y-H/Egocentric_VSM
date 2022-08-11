@@ -173,38 +173,38 @@ class ImgData3(Dataset):
             self.start_idx = int(num_data * 0.8)
             self.end_idx = num_data
 
-        self.all_A, self.all_NS, self.all_Done = info
+        self.all_NS,self.all_Done = info
 
     def __getitem__(self, idx):
         # time0 = time.time()
+        # different from IMG_data2 6 img. previous 5 obs + 1 current img
+
         pack_id = idx // 1000 + self.start_idx
         idx_data = idx % 1000
         root_dir = self.root + "%d/" % pack_id
 
         Done_data = self.all_Done[idx // 1000]
         Done1 = Done_data[idx_data - 1]
-        Done2 = Done_data[idx_data - 2]
+        Done2 = Done_data[idx_data + 1]
+        previous_flag = False
+
 
         img_pack = []
         if Done1 == 1 or idx_data == 0:
-            if BLACK_IMAGE == False:
-                img_path0 = root_dir + "frames/%d.png" % (idx_data * 6)
-                img_pack.append([plt.imread(img_path0)] * 5)
-            else:
-                img_pack = np.zeros((5, 128, 128))
+            img_path0 = root_dir + "frames/%d.png" % (idx_data * 6)
+            img_pack.append([plt.imread(img_path0)] * 6)
 
-            pre_action = torch.zeros(12).to(device, dtype=torch.float)
-
+        if Done2 == 1:
+            for i in range(7):
+                img_path0 = root_dir + "frames/%d.png" % ((idx_data - 2) * 6 + i)
+                img = plt.imread(img_path0)
+                img_pack.append(img)
+            previous_flag = True
         else:
-            if BLACK_IMAGE == False:
-                for i in range(1, 6):
-                    img_path0 = root_dir + "frames/%d.png" % ((idx_data - 1) * 6 + i)
-                    img = plt.imread(img_path0)
-                    img_pack.append(img)
-            else:
-                img_pack = np.zeros((5, 128, 128))
-
-            pre_action = self.all_A[idx // 1000][idx_data - 1]
+            for i in range(7):
+                img_path0 = root_dir + "frames/%d.png" % ((idx_data - 1) * 6 + i)
+                img = plt.imread(img_path0)
+                img_pack.append(img)
 
         IMG = np.asarray(img_pack)  # [:, :, :1]
         if len(IMG.shape) == 4:
@@ -213,13 +213,11 @@ class ImgData3(Dataset):
         IMG = self.transform_img(IMG)
 
         # # time1 = time.time()
-        next_state = self.all_NS[idx // 1000][idx_data]
-        action = self.all_A[idx // 1000][idx_data]
+        next_state = self.NS[idx // 1000][idx_data]
+        if previous_flag == True:
+            next_state = self.NS[idx // 1000][idx_data-1]
 
-        if self.input_previous_action == True:
-            action = torch.concat((pre_action, action))
-
-        sample = {'image': IMG, 'A': action, "NS": next_state}
+        sample = {'image': IMG, "NS": next_state}
         # time3 = time.time()
         # print("loaddata2:",time3-time0)
 
@@ -735,7 +733,7 @@ def start_train_ov_model(num_data, batch_size=8, lr=1e-1, scale=True):
         all_ov = []
         all_Done = []
         for i in range(train_packages):
-            ov = np.loadtxt(dataset_path + "%d/ov.csv" % (i))
+            ov = np.loadtxt(dataset_path + "%d/NS.csv" % (i))
             Done = np.loadtxt(dataset_path + "%d/DONE.csv" % i)
             all_ov.append(ov)
             all_Done.append(Done)
@@ -801,10 +799,11 @@ if __name__ == '__main__':
     # sin_para = np.loadtxt("traj_optim/dataset/V000_sin_para.csv")
     sin_para = np.loadtxt("CADandURDF/robot_repo/V000_cam/0.csv")
     # 1 Collect Data
-    # 2 Train
-    # 3 Test
-    # 4 Dataset evaluation
-    RUN_PROGRAM = 1
+    # 2 Train VSM
+    # 3 Train OV
+    # 4 Test
+    # 5 Dataset evaluation
+    RUN_PROGRAM = 3
     RAND_FIRCTION = True
     RAND_T = True
     RAND_P = True
@@ -859,7 +858,7 @@ if __name__ == '__main__':
         pre_trained_model = False
         pre_trained_model_path = "C:/Users/yuhan/Desktop/visual_self-model/train/mode56_0/best_model.pt"
         dataset_path = "C:/visual_project_data/data_package1/V000_cam_n0.2_mix0810/"
-        num_data = 200
+        num_data = 500
         batch_size = 256
         NORM = True
         PRE_A = True
@@ -870,14 +869,8 @@ if __name__ == '__main__':
         ACTIVATED_F = "L"  # Tahn or LeakReLU
         BLUR_IMG = True
         scale_coff = np.loadtxt("norm_dataset_V000_cam_n0.2_mix0810.csv")
+        num_output = 6
 
-        if REAL_OUTPUT:
-            num_output = 3
-        else:
-            num_output = 6
-
-        # model3: ResNet
-        from ResNet_RNN import *
 
         model = ResNet50( ACTIVATED_F,img_channel=5, num_classes=num_output, input_pre_a=PRE_A, normalization=NORM).to(device)
         # model = ResNet101( ACTIVATED_F,img_channel=5, num_classes=num_output, input_pre_a=PRE_A, normalization=NORM).to(device)
@@ -907,7 +900,7 @@ if __name__ == '__main__':
         pre_trained_model = False
         pre_trained_model_path = "C:/Users/yuhan/Desktop/visual_self-model/train/mode56_0/best_model.pt"
         dataset_path = "C:/visual_project_data/data_package1/V000_cam_n0.2_mix0810/"
-        num_data = 200
+        num_data = 1
         batch_size = 256
         NORM = True
         BLACK_IMAGE = False
@@ -916,7 +909,7 @@ if __name__ == '__main__':
         BLUR_IMG = True
         scale_coff = np.loadtxt("norm_dataset_V000_cam_n0.2_mix0810.csv")
 
-        model = ResNet50( ACTIVATED_F,img_channel=5, num_classes=6, normalization=NORM).to(device)
+        model = OV_Net( ACTIVATED_F,img_channel=5, num_classes=6, normalization=NORM).to(device)
 
         xx1, xx2 = scale_coff[0], scale_coff[1]
 

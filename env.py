@@ -9,7 +9,6 @@ import random
 import cv2
 import math as m
 
-
 def Rz_2D(theta):
     return np.array([[m.cos(theta), -m.sin(theta), 0],
                      [m.sin(theta), m.cos(theta), 0]])
@@ -197,21 +196,21 @@ class OpticalEnv(gym.Env):
     def reset(self):
         p.resetSimulation()
         p.setGravity(0, 0, -10)
-        planeId = p.loadURDF("ground/plane.urdf",
+        planeId = p.loadURDF("plane.urdf",
                              [random.uniform(-3, 3), random.uniform(-3, 3), 0],
                              p.getQuaternionFromEuler([0, 0, random.uniform(-np.pi, np.pi)]), useFixedBase=1
                              )
 
         if self.ground_type == "rug":
-            textureId = p.loadTexture("ground/rug.jpg")
+            textureId = p.loadTexture("C:/visual_project_data/ground/rug.jpg")
         elif self.ground_type == "rug_rand":
             r_id = random.randint(0, 999)
-            textureId = p.loadTexture("ground/rug/%d.jpg" % r_id)
+            textureId = p.loadTexture("C:/visual_project_data/ground/rug/%d.jpg" % r_id)
         elif self.ground_type == "grass_rand":
             r_id = random.randint(0, 999)
-            textureId = p.loadTexture("ground/grass/%d.jpg" % r_id)
+            textureId = p.loadTexture("C:/visual_project_data/ground/grass/%d.jpg" % r_id)
         else:
-            textureId = p.loadTexture("ground/%s.png" % self.ground_type)
+            textureId = p.loadTexture("C:/visual_project_data/ground/%s.png" % self.ground_type)
 
         # wall_textureId = p.loadTexture("wall_picture.png")
         # WallId_front = p.loadURDF("plane.urdf",[0,14,14], p.getQuaternionFromEuler([1.57,0,0]))
@@ -359,6 +358,7 @@ if __name__ == '__main__':
     print("robot_idx:", robot_idx)
     name = 'V0%02d' % robot_idx
     physicsClient = p.connect(p.GUI)
+    p.setAdditionalSearchPath(pd.getDataPath())
     RAND_FIRCTION = False
     RAND_T = False
     RAND_P = False
