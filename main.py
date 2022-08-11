@@ -7,6 +7,7 @@ from torch.utils.data import Dataset, DataLoader
 import matplotlib.pyplot as plt
 import torchvision
 from ResNet_RNN import *
+from model import *
 
 # from torchsummary import summary
 
@@ -185,16 +186,19 @@ class ImgData3(Dataset):
 
         Done_data = self.all_Done[idx // 1000]
         Done1 = Done_data[idx_data - 1]
-        Done2 = Done_data[idx_data + 1]
+        if idx_data + 1 ==1000:
+            Done2 = 1
+        else:
+            Done2 = Done_data[idx_data + 1]
         previous_flag = False
 
 
         img_pack = []
         if Done1 == 1 or idx_data == 0:
             img_path0 = root_dir + "frames/%d.png" % (idx_data * 6)
-            img_pack.append([plt.imread(img_path0)] * 6)
+            img_pack.append([plt.imread(img_path0)] * 7)
 
-        if Done2 == 1:
+        elif Done2 == 1 or idx_data ==999:
             for i in range(7):
                 img_path0 = root_dir + "frames/%d.png" % ((idx_data - 2) * 6 + i)
                 img = plt.imread(img_path0)
@@ -213,9 +217,10 @@ class ImgData3(Dataset):
         IMG = self.transform_img(IMG)
 
         # # time1 = time.time()
-        next_state = self.NS[idx // 1000][idx_data]
+        # print(Done1, Done2,idx,idx // 1000,idx_data)
+        next_state = self.all_NS[idx // 1000][idx_data]
         if previous_flag == True:
-            next_state = self.NS[idx // 1000][idx_data-1]
+            next_state = self.all_NS[idx // 1000][idx_data-1]
 
         sample = {'image': IMG, "NS": next_state}
         # time3 = time.time()
@@ -663,14 +668,10 @@ def train_ov(data_num, batchsize, train_info, valid_info, log_path, epochs, lr=1
         model.train()
 
         for i, batch in enumerate(train_dataloader):
-            IMGs, As, Ns = batch["image"], batch["A"], batch["NS"]
-            if BlACK_ACTION == True:
-                As = torch.zeros_like(As)
-            pred = model.forward(IMGs, As)
-            if REAL_OUTPUT == True:
-                output_d = torch.hstack((Ns[:, :2], Ns[:, 5:]))
-            else:
-                output_d = Ns
+            IMGs,  Ns = batch["image"], batch["NS"]
+
+            pred = model.forward(IMGs)
+            output_d = Ns
             loss = model.loss(pred, output_d)
             optimizer.zero_grad()
             loss.backward()
@@ -687,13 +688,9 @@ def train_ov(data_num, batchsize, train_info, valid_info, log_path, epochs, lr=1
 
         with torch.no_grad():
             for i, batch in enumerate(valid_dataloader):
-                IMGs, As, Ns = batch["image"], batch["A"], batch["NS"]
-                pred = model.forward(IMGs, As)
-                if REAL_OUTPUT == True:
-                    output_d = torch.hstack((Ns[:, :2], Ns[:, 5:]))
-                else:
-                    output_d = Ns
-                loss = model.loss(pred, output_d)
+                IMGs,v_Ns = batch["image"], batch["NS"]
+                pred = model.forward(IMGs)
+                loss = model.loss(pred, v_Ns)
                 loss_value = loss.item()
                 l.append(loss_value)
             epoch_v_loss = np.mean(l)
@@ -729,46 +726,46 @@ def start_train_ov_model(num_data, batch_size=8, lr=1e-1, scale=True):
     train_packages = int(num_data * 0.8)
     valid_packages = int(num_data * 0.2)
 
-    if use_DataLoader == True:
-        all_ov = []
-        all_Done = []
-        for i in range(train_packages):
-            ov = np.loadtxt(dataset_path + "%d/NS.csv" % (i))
-            Done = np.loadtxt(dataset_path + "%d/DONE.csv" % i)
-            all_ov.append(ov)
-            all_Done.append(Done)
-        all_ov = np.asarray(all_ov)
-        all_Done = np.asarray(all_Done)
-        all_ov = normalize_output_data(all_ov, scale=scale)
-        all_ov = torch.from_numpy(all_ov).to(device, dtype=torch.float)
-        all_Done = torch.from_numpy(all_Done).to(device, dtype=torch.float)
-        train_info = [all_ov, all_Done]
 
-        vall_ov = []
-        v_all_Done = []
-        for i in range(train_packages, num_data):
-            vo = np.loadtxt(dataset_path + "%d/NS.csv" % (i))
-            v_Done = np.loadtxt(dataset_path + "%d/DONE.csv" % i)
-            vall_ov.append(vo)
-            v_all_Done.append(v_Done)
-        vall_ov = np.asarray(vall_ov)
-        vall_Done = np.asarray(v_all_Done)
+    all_ov = []
+    all_Done = []
+    for i in range(train_packages):
+        ov = np.loadtxt(dataset_path + "%d/NS.csv" % (i))[:, :6]
+        Done = np.loadtxt(dataset_path + "%d/DONE.csv" % i)
+        all_ov.append(ov)
+        all_Done.append(Done)
+    all_ov = np.asarray(all_ov)
+    all_Done = np.asarray(all_Done)
+    all_ov = normalize_output_data(all_ov, scale=scale)
+    all_ov = torch.from_numpy(all_ov).to(device, dtype=torch.float)
+    all_Done = torch.from_numpy(all_Done).to(device, dtype=torch.float)
+    train_info = [all_ov, all_Done]
 
-        vall_ov = normalize_output_data(vall_ov, scale=scale)
-        vall_Done = torch.from_numpy(vall_Done).to(device, dtype=torch.float)
-        valid_info = [vall_ov, vall_Done]
-        print("data loaded!")
+    vall_ov = []
+    v_all_Done = []
+    for i in range(train_packages, num_data):
+        vo = np.loadtxt(dataset_path + "%d/NS.csv" % (i))[:, :6]
+        v_Done = np.loadtxt(dataset_path + "%d/DONE.csv" % i)
+        vall_ov.append(vo)
+        v_all_Done.append(v_Done)
+    vall_ov = np.asarray(vall_ov)
+    v_all_Done = np.asarray(v_all_Done)
 
-        train_L, test_L = train_ov(    num_data,
-                                       batch_size,
-                                       train_info,
-                                       valid_info,
-                                       log_path,
+    vall_ov = normalize_output_data(vall_ov, scale=scale)
+    v_all_Done = torch.from_numpy(v_all_Done).to(device, dtype=torch.float)
+    valid_info = [vall_ov, v_all_Done]
+    print("data loaded!")
 
-                                       lr=lr,
-                                       epochs=5000,
-                                       save=True,
-                                       plot=True)
+    train_L, test_L = train_ov(    num_data,
+                                   batch_size,
+                                   train_info,
+                                   valid_info,
+                                   log_path,
+
+                                   lr=lr,
+                                   epochs=5000,
+                                   save=True,
+                                   plot=True)
 
     plt.plot(np.arange(len(train_L)), train_L, label='training')
     plt.plot(np.arange(len(test_L)), test_L, label='validation')
@@ -858,7 +855,7 @@ if __name__ == '__main__':
         pre_trained_model = False
         pre_trained_model_path = "C:/Users/yuhan/Desktop/visual_self-model/train/mode56_0/best_model.pt"
         dataset_path = "C:/visual_project_data/data_package1/V000_cam_n0.2_mix0810/"
-        num_data = 500
+        num_data = 5
         batch_size = 256
         NORM = True
         PRE_A = True
@@ -900,8 +897,8 @@ if __name__ == '__main__':
         pre_trained_model = False
         pre_trained_model_path = "C:/Users/yuhan/Desktop/visual_self-model/train/mode56_0/best_model.pt"
         dataset_path = "C:/visual_project_data/data_package1/V000_cam_n0.2_mix0810/"
-        num_data = 1
-        batch_size = 256
+        num_data = 500
+        batch_size = 128
         NORM = True
         BLACK_IMAGE = False
         BlACK_ACTION = False
@@ -909,8 +906,8 @@ if __name__ == '__main__':
         BLUR_IMG = True
         scale_coff = np.loadtxt("norm_dataset_V000_cam_n0.2_mix0810.csv")
 
-        model = OV_Net( ACTIVATED_F,img_channel=5, num_classes=6, normalization=NORM).to(device)
-
+        # model = OV_Net( ACTIVATED_F,img_channel=7, num_classes=6, normalization=NORM).to(device)
+        model = RCNN(in_channels=7).to(device)
         xx1, xx2 = scale_coff[0], scale_coff[1]
 
         model_save_path = "train/"
