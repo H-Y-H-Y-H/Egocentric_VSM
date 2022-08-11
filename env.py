@@ -173,6 +173,9 @@ class OpticalEnv(gym.Env):
 
             #   S{t}  i  i  i  i  i  S{t+1}
             #     |   |  |  |  |  |  |
+            #     in  in in in in in pred   vsm
+            #     in  in in in in in in     already_move
+            #
             if i % 10 == 0 and self.robot_camera == True:
                 self.img = robo_camera(self.robotid, 12)
                 if i != 0:
