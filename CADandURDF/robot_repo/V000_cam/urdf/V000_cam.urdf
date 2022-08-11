@@ -1,0 +1,796 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
+     Commit Version: 1.6.0-1-g15f4949  Build Version: 1.6.7594.29634
+     For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
+<robot
+  name="V000_cam">
+  <link
+    name="body">
+    <inertial>
+      <origin
+        xyz="-9.54880772586375E-07 0.0464116058279854 0.0121268540557259"
+        rpy="0 0 0" />
+      <mass
+        value="1.03" />
+      <inertia
+        ixx="0.00247370771659153"
+        ixy="1.75628213091057E-08"
+        ixz="1.38332715719944E-08"
+        iyy="0.00245934745224797"
+        iyz="-3.59628508890815E-08"
+        izz="0.00248312387112852" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://V000_cam/meshes/body.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.2 0.2 0.2 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://V000_cam/meshes/body.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <link
+    name="00">
+    <inertial>
+      <origin
+        xyz="-0.044030080474816 -3.63001309802713E-07 0.0577248764406495"
+        rpy="0 0 0" />
+      <mass
+        value="0.085" />
+      <inertia
+        ixx="7.62606139414576E-05"
+        ixy="1.36848243850675E-14"
+        ixz="-6.41822721081613E-10"
+        iyy="7.58096552667325E-05"
+        iyz="-6.41822721081613E-10"
+        izz="3.22965690401588E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://V000_cam/meshes/00.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.2 0.2 0.2 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://V000_cam/meshes/00.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="body_00"
+    type="revolute">
+    <origin
+      xyz="-0.0698586132052743 -0.0961520988773181 -0.011848133692922"
+      rpy="3.14159265358978 1.38208579601134 0.942477796076927" />
+    <parent
+      link="body" />
+    <child
+      link="00" />
+    <axis
+      xyz="1 0 0" />
+    <limit
+      lower="-4"
+      upper="4"
+      effort="2"
+      velocity="0.2094396" />
+  </joint>
+  <link
+    name="01">
+    <inertial>
+      <origin
+        xyz="-1.45200523912759E-06 -1.45200523916922E-06 0.0577259654445788"
+        rpy="0 0 0" />
+      <mass
+        value="0.085" />
+      <inertia
+        ixx="6.67941659320179E-05"
+        ixy="2.18957240136024E-13"
+        ixz="-2.79364977312629E-09"
+        iyy="8.52661387999371E-05"
+        iyz="-2.79364977309919E-09"
+        izz="3.22965686296139E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://V000_cam/meshes/01.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.2 0.2 0.2 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://V000_cam/meshes/01.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="00_01"
+    type="revolute">
+    <origin
+      xyz="-0.0440297174735062 0 0.0812000000000001"
+      rpy="0 0 1.5707963267949" />
+    <parent
+      link="00" />
+    <child
+      link="01" />
+    <axis
+      xyz="1 0 0" />
+    <limit
+      lower="-4"
+      upper="4"
+      effort="2"
+      velocity="0.2094396" />
+  </joint>
+  <link
+    name="02">
+    <inertial>
+      <origin
+        xyz="-1.66533453693773E-16 -0.0532160764699449 0.0531179899870652"
+        rpy="0 0 0" />
+      <mass
+        value="0.07" />
+      <inertia
+        ixx="0.000416559633615451"
+        ixy="-8.87690528722507E-19"
+        ixz="2.3039296165317E-19"
+        iyy="5.44190175587167E-05"
+        iyz="6.08030153794323E-05"
+        izz="0.000394411456477928" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://V000_cam/meshes/02.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.2 0.2 0.2 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://V000_cam/meshes/02.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="01_02"
+    type="revolute">
+    <origin
+      xyz="0 0 0.0812"
+      rpy="0 0 0" />
+    <parent
+      link="01" />
+    <child
+      link="02" />
+    <axis
+      xyz="1 0 0" />
+    <limit
+      lower="-4"
+      upper="4"
+      effort="2"
+      velocity="0.2094396" />
+  </joint>
+  <link
+    name="10">
+    <inertial>
+      <origin
+        xyz="-0.0267710126538516 -3.63001309768018E-07 0.0577248764406495"
+        rpy="0 0 0" />
+      <mass
+        value="0.085" />
+      <inertia
+        ixx="7.62606139414576E-05"
+        ixy="1.36848358200123E-14"
+        ixz="-6.41822721012526E-10"
+        iyy="7.58096552667325E-05"
+        iyz="-6.4182272104519E-10"
+        izz="3.22965690401587E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://V000_cam/meshes/10.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.2 0.2 0.2 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://V000_cam/meshes/10.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="body_10"
+    type="continuous">
+    <origin
+      xyz="-0.116112807904595 0.0377273413418564 0.00510453297153175"
+      rpy="-3.14159265358977 1.38208579601134 -0.314159265358966" />
+    <parent
+      link="body" />
+    <child
+      link="10" />
+    <axis
+      xyz="1 0 0" />
+    <limit
+      lower="-4"
+      upper="4"
+      effort="2"
+      velocity="0.2094396" />
+  </joint>
+  <link
+    name="11">
+    <inertial>
+      <origin
+        xyz="-1.4520052390235E-06 -1.4520052390582E-06 0.0577259654445788"
+        rpy="0 0 0" />
+      <mass
+        value="0.085" />
+      <inertia
+        ixx="6.67941659320178E-05"
+        ixy="2.18957268935144E-13"
+        ixz="-2.79364977320083E-09"
+        iyy="8.52661387999372E-05"
+        iyz="-2.79364977320512E-09"
+        izz="3.22965686296139E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://V000_cam/meshes/11.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.2 0.2 0.2 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://V000_cam/meshes/11.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="10_11"
+    type="revolute">
+    <origin
+      xyz="-0.0267706496525418 0 0.0812000000000001"
+      rpy="0 0 1.5707963267949" />
+    <parent
+      link="10" />
+    <child
+      link="11" />
+    <axis
+      xyz="1 0 0 " />
+    <limit
+      lower="-4"
+      upper="4"
+      effort="2"
+      velocity="0.2094396" />
+  </joint>
+  <link
+    name="12">
+    <inertial>
+      <origin
+        xyz="-1.2490009027033E-16 -0.0532160764699449 0.0531179899870651"
+        rpy="0 0 0" />
+      <mass
+        value="0.07" />
+      <inertia
+        ixx="0.000416559633615452"
+        ixy="-9.82558218814988E-20"
+        ixz="1.35525271560688E-20"
+        iyy="5.44190175587166E-05"
+        iyz="6.0803015379432E-05"
+        izz="0.000394411456477929" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://V000_cam/meshes/12.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.2 0.2 0.2 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://V000_cam/meshes/12.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="11_12"
+    type="revolute">
+    <origin
+      xyz="0 0 0.0812000000000001"
+      rpy="0 0 0" />
+    <parent
+      link="11" />
+    <child
+      link="12" />
+    <axis
+      xyz="1 0 0" />
+    <limit
+      lower="-4"
+      upper="4"
+      effort="2"
+      velocity="0.2094396" />
+  </joint>
+  <link
+    name="20">
+    <inertial>
+      <origin
+        xyz="-0.0494852951359748 -3.6300130976108E-07 0.0577248764406495"
+        rpy="0 0 0" />
+      <mass
+        value="0.085" />
+      <inertia
+        ixx="7.62606139414575E-05"
+        ixy="1.36848231145181E-14"
+        ixz="-6.41822721021261E-10"
+        iyy="7.58096552667325E-05"
+        iyz="-6.4182272105959E-10"
+        izz="3.22965690401587E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://V000_cam/meshes/20.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.2 0.2 0.2 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://V000_cam/meshes/20.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="body_20"
+    type="continuous">
+    <origin
+      xyz="0.112060329033112 0.0364106111379437 -0.017206501635675"
+      rpy="3.14159265358977 1.38208579601134 -2.82743338823083" />
+    <parent
+      link="body" />
+    <child
+      link="20" />
+    <axis
+      xyz="1 0 0" />
+    <limit
+      lower="-4"
+      upper="4"
+      effort="2"
+      velocity="0.2094396" />
+  </joint>
+  <link
+    name="21">
+    <inertial>
+      <origin
+        xyz="-1.45200523900268E-06 -1.45200523904432E-06 0.0577259654445788"
+        rpy="0 0 0" />
+      <mass
+        value="0.085" />
+      <inertia
+        ixx="6.67941659320179E-05"
+        ixy="2.1895725622965E-13"
+        ixz="-2.79364977321608E-09"
+        iyy="8.52661387999372E-05"
+        iyz="-2.79364977319977E-09"
+        izz="3.2296568629614E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://V000_cam/meshes/21.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.2 0.2 0.2 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://V000_cam/meshes/21.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="20_21"
+    type="revolute">
+    <origin
+      xyz="-0.0494849321346651 0 0.0812000000000001"
+      rpy="0 0 1.5707963267949" />
+    <parent
+      link="20" />
+    <child
+      link="21" />
+    <axis
+      xyz="1 0 0" />
+    <limit
+      lower="-4"
+      upper="4"
+      effort="2"
+      velocity="0.2094396" />
+  </joint>
+  <link
+    name="22">
+    <inertial>
+      <origin
+        xyz="-1.2490009027033E-16 -0.0532160764699449 0.0531179899870652"
+        rpy="0 0 0" />
+      <mass
+        value="0.07" />
+      <inertia
+        ixx="0.000416559633615452"
+        ixy="-3.5067164016328E-19"
+        ixz="1.0842021724855E-19"
+        iyy="5.44190175587168E-05"
+        iyz="6.08030153794327E-05"
+        izz="0.000394411456477929" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://V000_cam/meshes/22.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.2 0.2 0.2 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://V000_cam/meshes/22.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="21_22"
+    type="revolute">
+    <origin
+      xyz="0 0 0.0812"
+      rpy="0 0 0" />
+    <parent
+      link="21" />
+    <child
+      link="22" />
+    <axis
+      xyz="1 0 0" />
+    <limit
+      lower="-4"
+      upper="4"
+      effort="2"
+      velocity="0.2094396" />
+  </joint>
+  <link
+    name="30">
+    <inertial>
+      <origin
+        xyz="-0.0563860999325477 -3.63001309781896E-07 0.0577248764406495"
+        rpy="0 0 0" />
+      <mass
+        value="0.085" />
+      <inertia
+        ixx="7.62606139414577E-05"
+        ixy="1.36848298907817E-14"
+        ixz="-6.41822721033755E-10"
+        iyy="7.58096552667326E-05"
+        iyz="-6.41822721056202E-10"
+        izz="3.22965690401588E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://V000_cam/meshes/30.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.2 0.2 0.2 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://V000_cam/meshes/30.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="body_30"
+    type="continuous">
+    <origin
+      xyz="0.0684961879673499 -0.0942768814118453 -0.0239847960746517"
+      rpy="3.14159265358978 1.38208579601134 2.19911485751285" />
+    <parent
+      link="body" />
+    <child
+      link="30" />
+    <axis
+      xyz="1 0 0" />
+    <limit
+      lower="-4"
+      upper="4"
+      effort="2"
+      velocity="0.2094396" />
+  </joint>
+  <link
+    name="31">
+    <inertial>
+      <origin
+        xyz="-1.45200523903044E-06 -1.45200523898187E-06 0.0577259654445788"
+        rpy="0 0 0" />
+      <mass
+        value="0.085" />
+      <inertia
+        ixx="6.6794165932018E-05"
+        ixy="2.18957229124596E-13"
+        ixz="-2.79364977318559E-09"
+        iyy="8.52661387999374E-05"
+        iyz="-2.79364977328045E-09"
+        izz="3.2296568629614E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://V000_cam/meshes/31.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.2 0.2 0.2 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://V000_cam/meshes/31.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="30_31"
+    type="revolute">
+    <origin
+      xyz="-0.0563857369312379 0 0.0812000000000001"
+      rpy="0 0 1.57079632679489" />
+    <parent
+      link="30" />
+    <child
+      link="31" />
+    <axis
+      xyz="1 0 0" />
+    <limit
+      lower="-4"
+      upper="4"
+      effort="2"
+      velocity="0.2094396" />
+  </joint>
+  <link
+    name="32">
+    <inertial>
+      <origin
+        xyz="-8.32667268468867E-17 -0.0532160764699449 0.0531179899870652"
+        rpy="0 0 0" />
+      <mass
+        value="0.07" />
+      <inertia
+        ixx="0.000416559633615452"
+        ixy="-9.75781955236954E-19"
+        ixz="2.16840434497101E-19"
+        iyy="5.44190175587166E-05"
+        iyz="6.08030153794323E-05"
+        izz="0.000394411456477929" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://V000_cam/meshes/32.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.2 0.2 0.2 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://V000_cam/meshes/32.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="31_32"
+    type="revolute">
+    <origin
+      xyz="0 0 0.0812"
+      rpy="0 0 0" />
+    <parent
+      link="31" />
+    <child
+      link="32" />
+    <axis
+      xyz="1 0 0" />
+    <limit
+      lower="-4"
+      upper="4"
+      effort="2"
+      velocity="0.2094396" />
+  </joint>
+  <link
+    name="camera">
+    <inertial>
+      <origin
+        xyz="-6.93889390390723E-18 0 0.000999999999999994"
+        rpy="0 0 0" />
+      <mass
+        value="0.05" />
+      <inertia
+        ixx="7.44492009053829E-11"
+        ixy="3.39483796978698E-28"
+        ixz="-4.06822130565541E-25"
+        iyy="7.44492009053829E-11"
+        iyz="3.87740912134232E-26"
+        izz="1.22718463030851E-10" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://V000_cam/meshes/camera.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.2 0.2 0.2 1"  />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://V000_cam/meshes/camera.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="body_cam"
+    type="fixed">
+    <origin
+      xyz="-0.0315000177857134 0.128467195926324 0.0788583994340782"
+      rpy="-0.712309306 0 0" />
+    <parent
+      link="body" />
+    <child
+      link="camera" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+</robot>
