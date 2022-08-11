@@ -76,7 +76,7 @@ def data_collection(env, steps, parameters, GAUSSIAN, save_path='./', noise=0.1)
 
 
 class ImgData2(Dataset):
-    def __init__(self, mode, num_data, info, data_path, transform=None, input_previous_action=False):
+    def __init__(self, mode, num_data, info, data_path, transform=None, input_previous_action = False):
         self.root = data_path
         self.input_previous_action = input_previous_action
         if mode == "train":
@@ -163,6 +163,90 @@ class ImgData2(Dataset):
 
         return IMG
 
+class ImgData3(Dataset):
+    def __init__(self, mode, num_data, info, data_path):
+        self.root = data_path
+        if mode == "train":
+            self.start_idx = 0
+            self.end_idx = int(num_data * 0.8)
+        else:
+            self.start_idx = int(num_data * 0.8)
+            self.end_idx = num_data
+
+        self.all_A, self.all_NS, self.all_Done = info
+
+    def __getitem__(self, idx):
+        # time0 = time.time()
+        pack_id = idx // 1000 + self.start_idx
+        idx_data = idx % 1000
+        root_dir = self.root + "%d/" % pack_id
+
+        Done_data = self.all_Done[idx // 1000]
+        Done1 = Done_data[idx_data - 1]
+        Done2 = Done_data[idx_data - 2]
+
+        img_pack = []
+        if Done1 == 1 or idx_data == 0:
+            if BLACK_IMAGE == False:
+                img_path0 = root_dir + "frames/%d.png" % (idx_data * 6)
+                img_pack.append([plt.imread(img_path0)] * 5)
+            else:
+                img_pack = np.zeros((5, 128, 128))
+
+            pre_action = torch.zeros(12).to(device, dtype=torch.float)
+
+        else:
+            if BLACK_IMAGE == False:
+                for i in range(1, 6):
+                    img_path0 = root_dir + "frames/%d.png" % ((idx_data - 1) * 6 + i)
+                    img = plt.imread(img_path0)
+                    img_pack.append(img)
+            else:
+                img_pack = np.zeros((5, 128, 128))
+
+            pre_action = self.all_A[idx // 1000][idx_data - 1]
+
+        IMG = np.asarray(img_pack)  # [:, :, :1]
+        if len(IMG.shape) == 4:
+            IMG = IMG.squeeze()
+
+        IMG = self.transform_img(IMG)
+
+        # # time1 = time.time()
+        next_state = self.all_NS[idx // 1000][idx_data]
+        action = self.all_A[idx // 1000][idx_data]
+
+        if self.input_previous_action == True:
+            action = torch.concat((pre_action, action))
+
+        sample = {'image': IMG, 'A': action, "NS": next_state}
+        # time3 = time.time()
+        # print("loaddata2:",time3-time0)
+
+        return sample
+
+    def __len__(self):
+        return (self.end_idx - self.start_idx) * 1000
+
+    def transform_img(self, img):
+
+        if BLUR_IMG == True:
+            if random.randint(0, 1) == 1:
+                sig_r_xy = random.uniform(0.1, 5)
+                win_r = 2 * random.randint(1, 20) + 1
+                img = cv2.GaussianBlur(img, (win_r, win_r), sigmaX=sig_r_xy, sigmaY=sig_r_xy,
+                                       borderType=cv2.BORDER_DEFAULT)
+
+            IMG = torch.from_numpy(img).to(device, dtype=torch.float)
+
+            if random.randint(0, 1) == 1:
+                T = torchvision.transforms.ColorJitter(brightness=[0.1, 10])
+                IMG = T(IMG)
+
+        else:
+            IMG = torch.from_numpy(img).to(device, dtype=torch.float)
+
+        return IMG
 
 
 def process_data_Fast_Feq(data, data_range, batch_size=128, input_previous_action=False, random=True):
@@ -170,7 +254,6 @@ def process_data_Fast_Feq(data, data_range, batch_size=128, input_previous_actio
     A = np.array(A).astype(np.float32)
     NS = np.array(NS).astype(np.float32)
     DONE = np.array(DONE).astype(np.float32)
-
     Canc_IMGs, As, Ss, Ns = [], [], [], []
 
     print(len(DONE))
@@ -554,14 +637,14 @@ def train_ov(data_num, batchsize, train_info, valid_info, log_path, epochs, lr=1
                  plot=False):
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.1, patience=5, verbose=True)
-    training_data = ImgData2(mode="train",
+    training_data = ImgData3(mode="train",
                              info=train_info,
                              num_data=data_num,
-                             data_path=dataset_path, input_previous_action=input_previous_action)
-    validation_data = ImgData2(mode="valid",
+                             data_path=dataset_path)
+    validation_data = ImgData3(mode="valid",
                                info=valid_info,
                                num_data=data_num,
-                               data_path=dataset_path, input_previous_action=input_previous_action)
+                               data_path=dataset_path)
 
     train_dataloader = DataLoader(training_data, batch_size=batchsize, shuffle=True, num_workers=0)
     valid_dataloader = DataLoader(validation_data, batch_size=batchsize, shuffle=True, num_workers=0)
