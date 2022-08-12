@@ -282,7 +282,7 @@ class ov_model(nn.Module):
         x = self.act_f(self.fc1(x))
         x = self.act_f(self.fc2(x))
 
-        x = torch.cat(5*[x.unsqueeze(0)])
+        x = torch.cat(7*[x.unsqueeze(0)])
 
 
         l_x = torch.transpose(x, 0, 2)
@@ -296,6 +296,10 @@ class ov_model(nn.Module):
 
 
     def loss(self, pred, target):
+        # print(pred.get_device(),target.get_device())
+        # if target.get_device() == -1:
+        #     print(target)
+        target = target.to('cuda', dtype=torch.float)
         return torch.mean((pred - target) ** 2)
 
     def _make_layer(self, block, num_residual_blocks, intermediate_channels, stride):
@@ -350,7 +354,10 @@ def ResNet152(ACTIVATED_F,img_channel=3, num_classes=6, input_pre_a = False,norm
     return ResNet(block, [3, 8, 36, 3], img_channel, num_classes,input_pre_a = input_pre_a,normalization = normalization,ACTIVATED_F = ACTIVATED_F)
 
 
-
+def test():
+    net = ResNet101("L",img_channel=3, num_classes=1000)
+    y = net(torch.randn(4, 3, 224, 224)).to("cuda")
+    print(y.size())
 
 
 if __name__ == "__main__":
@@ -361,11 +368,11 @@ if __name__ == "__main__":
 
     # Plot summary and test speed
     print("start", device)
-    model = ResNet50(ACTIVATED_F= 'L', img_channel=5, num_classes=6, input_pre_a = True).to(device)
+    model = ResNet18(ACTIVATED_F= 'L', img_channel=5, num_classes=6, input_pre_a = True).to(device)
 
     x_i = torch.randn(5, 128, 128).to(device)
     x_a = torch.randn(24).to(device)
-    summary(model, [(5, 128, 128),(1,1,24)])
+    # summary(model, [(5, 128, 128),(1,1,24)])
     t1= time.time()
     t0 = t1
     for i in range(100):
