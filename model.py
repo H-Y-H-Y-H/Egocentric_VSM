@@ -109,6 +109,7 @@ class RCNN(nn.Module):
         return x
 
     def loss(self, pred, target):
+        target = target.to('cuda', dtype=torch.float)
         return torch.mean((pred - target) ** 2)
 
 if __name__ == "__main__":
