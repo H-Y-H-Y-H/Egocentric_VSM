@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import torchvision
 from ResNet_RNN import *
 from model import *
+import pybullet_data as pd
 
 # from torchsummary import summary
 
@@ -800,7 +801,7 @@ if __name__ == '__main__':
     # 3 Train OV
     # 4 Test
     # 5 Dataset evaluation
-    RUN_PROGRAM = 3
+    RUN_PROGRAM = 1
     RAND_FIRCTION = True
     RAND_T = True
     RAND_P = True
@@ -808,6 +809,7 @@ if __name__ == '__main__':
     if RUN_PROGRAM == 1:
         # data collection
         p.connect(p.DIRECT)
+        p.setAdditionalSearchPath(pd.getDataPath())
         # mix2 is the previous action space 0.4,0.2,0.2
         # mix3 is the constrained action space all 0.2 noise
         GROUND = 'mix0810'
@@ -821,8 +823,8 @@ if __name__ == '__main__':
         env.data_collection = True
         offline_data_path = "C:/visual_project_data/"
         # offline_data_path = "D:/visual_project_data/"
-        start_id = 490
-        start_end = range(start_id, start_id + 15)
+        start_id = 1450
+        start_end = range(start_id, start_id + 50)
         data_num = 1  #
         noise = 0.2
         data_type = "%s_n%s_%s/" % (name, str(noise), GROUND)
