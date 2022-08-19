@@ -342,7 +342,7 @@ def ResNet18(ACTIVATED_F,img_channel=3, num_classes=6, input_pre_a = False,norma
 def ResNet50(ACTIVATED_F,img_channel=3, num_classes=6, input_pre_a = False,normalization = True):
     return ResNet(block, [3, 4, 6, 3], img_channel, num_classes,input_pre_a = input_pre_a,normalization = normalization,ACTIVATED_F = ACTIVATED_F)
 
-def OV_Net(ACTIVATED_F,img_channel=3, num_classes=6, normalization = True):
+def OV_Net(ACTIVATED_F,img_channel=7, num_classes=6, normalization = True):
     return ov_model(block, [3, 4, 6, 3], img_channel, num_classes,normalization = normalization,ACTIVATED_F = ACTIVATED_F)
 
 

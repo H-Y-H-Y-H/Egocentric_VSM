@@ -67,6 +67,7 @@ class OpticalEnv(gym.Env):
         self.data_collection = data_cll_flag
         self.ground_type = ground_type
         self.internal_f_state = []
+        self.ov_input = []
 
         obs = self.reset()
         self.action_space = gym.spaces.Box(low=-np.ones(self.dof), high=np.ones(self.dof))
@@ -154,6 +155,7 @@ class OpticalEnv(gym.Env):
                                         maxVelocity=self.maxVelocity)
 
         self.image_stream = []
+        self.ov_input = []
         for i in range(self.n_sim_steps):
             if self.render:
                 # Capture Camera
@@ -173,10 +175,11 @@ class OpticalEnv(gym.Env):
             #   S{t}  i  i  i  i  i  S{t+1}
             #     |   |  |  |  |  |  |
             #     in  in in in in in pred   vsm
-            #     in  in in in in in in     already_move
+            #     in  in in in in in in     vo
             #
             if i % 10 == 0 and self.robot_camera == True:
                 self.img = robo_camera(self.robotid, 12)
+                self.ov_input.append(self.img)
                 if i != 0:
                     self.image_stream.append(self.img)
 
@@ -191,6 +194,7 @@ class OpticalEnv(gym.Env):
 
         if self.robot_camera == True:
             self.img = robo_camera(self.robotid, 12)
+            self.ov_input.append(self.img)
 
 
     def reset(self):
