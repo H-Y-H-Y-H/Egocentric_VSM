@@ -6,11 +6,12 @@ folder_name = '../res_test/'
 
 
 def plot_curve(pred,gt,vo_result,id_name):
+    vo_pred_loss_list = []
     for i in range(len(pred[0])):
         plt.figure(figsize = (4,4))
         plt.plot(range(len(gt)),gt[:,i],label = 'gt',linewidth = 2, alpha=0.3,c = 'r',)
         # plt.plot(range(len(gt)),pred[:,i],label = 'pred',c = 'g')
-        plt.plot(range(len(gt)),vo_result[:,i],label = 'vo',c = 'b')
+        plt.plot(range(len(gt)-1),vo_result[1:,i],label = 'vo',c = 'b')
         # min_y = np.min(gt[:,i])
         # max_y = np.max(min_y/2)
         # plt.vlines(done_list, ymin =min_y, ymax=max_y,label = "done")
@@ -18,16 +19,17 @@ def plot_curve(pred,gt,vo_result,id_name):
         # plt.ylabel('loss')
         # plt.xlabel("step")
         plt.legend()
+        plt.title("Evaluation_%s:"%d_path+label_list[i])
         plt.show()
-        R_value, _ = pearsonr(gt[:, i], pred[:, i])
-        loss= np.linalg.norm(gt-pred)
-        print("VSM:",R_value,loss)
-        R_value, _ = pearsonr(gt[:, i], vo_result[:, i])
-        loss= np.linalg.norm(gt-vo_result)
-        print("VO:", R_value, loss)
-        # plt.title("Evaluation_%s:"%d_path+label_list[i] + "R_square"+str(R_value**2))
         # plt.savefig("../plots/%s_%s"%(label_list[i],id_name))
-
+        R_value, _ = pearsonr(gt[:, i], pred[:, i])
+        loss= np.linalg.norm(gt[:, i]-pred[:,i])
+        print("VSM:",R_value, loss)
+        R_value, _ = pearsonr(gt[:-1, i], vo_result[1:, i])
+        loss= np.linalg.norm(gt[:-1, i]-vo_result[1:, i])
+        print("VO:", R_value, loss)
+        vo_pred_loss_list.append(np.linalg.norm(vo_result[1:, i]-pred[:-1,i]))
+    print(vo_pred_loss_list,np.sum(vo_pred_loss_list))
 
 
 tasks_list = ['f', 'b', 'r', 'l']
@@ -68,4 +70,10 @@ for ground_id in range(1):
             robot_loc_ori = np.loadtxt(d_path + "/data/rob_pos_ori.csv")
             id_name = "%d_%s_%s.png"%(mode,task,ground_list[ground_id])
             plot_curve(pred, gt,vo_result,id_name)
+
+
+# def change_plot():
+
+
+
 

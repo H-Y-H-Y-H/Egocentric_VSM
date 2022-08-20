@@ -791,7 +791,7 @@ def normalize_output_data(data, scale=True):
 
 
 def resiliency_test(model, env, parameters, save_flag, step_num=100, epoisde_times=10, num_traj=50, noise=0.05,
-                    input_pre_a=0, noralization=True):
+                    input_pre_a=0, noralization=True,frozen_joint = []):
     global TASK
 
     model.eval()
@@ -902,7 +902,10 @@ def resiliency_test(model, env, parameters, save_flag, step_num=100, epoisde_tim
 
             cur_theta = c_ori[2]
             # Only choose the action that has largest rewards.
-            choose_a[2] = 0
+
+            # Freeze the joints
+            if len(frozen_joint)>0:
+                choose_a[frozen_joint] = 0
             obs, r_step, done, _ = env.step(choose_a)
             log_action.append(choose_a)
 
@@ -948,9 +951,10 @@ def resiliency_test(model, env, parameters, save_flag, step_num=100, epoisde_tim
 
 
 if __name__ == '__main__':
-    robot_idx = 0
-    name = 'V%03d_cam' % robot_idx
-    print(name)
+    robot_idx = 1
+    # name = 'V%03d_cam' % robot_idx
+    # print(name)
+    name = "broken_feet"
 
     # sin_para = np.loadtxt("traj_optim/dataset/V000_sin_para.csv")
     sin_para = np.loadtxt("CADandURDF/robot_repo/V000_cam/0.csv")
@@ -959,7 +963,7 @@ if __name__ == '__main__':
     # 3 Train OV
     # 4 Test
     # 5 Dataset evaluation
-    RUN_PROGRAM = 3
+    RUN_PROGRAM = 1
     RAND_FIRCTION = True
     RAND_T = True
     RAND_P = True
@@ -971,7 +975,7 @@ if __name__ == '__main__':
         p.setAdditionalSearchPath(pd.getDataPath())
         # mix2 is the previous action space 0.4,0.2,0.2
         # mix3 is the constrained action space all 0.2 noise
-        GROUND = 'mix0810'
+        GROUND = 'mix0819'
         env = OpticalEnv(name, ground_type='rug', robot_camera=True,
                          urdf_path="../CADandURDF/robot_repo/%s/urdf/%s.urdf" % (name, name),
                          rand_fiction=RAND_FIRCTION,
@@ -982,8 +986,8 @@ if __name__ == '__main__':
         env.data_collection = True
         offline_data_path = "C:/visual_project_data/"
         # offline_data_path = "D:/visual_project_data/"
-        start_id = 1450
-        start_end = range(start_id, start_id + 50)
+        start_id = 45
+        start_end = range(start_id, start_id + 5)
         data_num = 1  #
         noise = 0.2
         data_type = "%s_n%s_%s/" % (name, str(noise), GROUND)
@@ -1155,7 +1159,7 @@ if __name__ == '__main__':
                 ###########################################
     # Test recovery
     elif RUN_PROGRAM == 5:
-        p.connect(p.DIRECT)
+        p.connect(p.GUI)
         p.setAdditionalSearchPath(pd.getDataPath())
         GROUND_list = ['rug_rand', 'grid', 'color_dots', 'grass_rand']
         TASK_list = ['f', 'r', 'l', 'b']
@@ -1222,7 +1226,8 @@ if __name__ == '__main__':
                                 noise=0.2,
                                 step_num=56,
                                 save_flag=False,
-                                input_pre_a=PRE_A)
+                                input_pre_a=PRE_A,
+                                frozen_joint = [])
 
                 ####-----------------------------------####
                 ###########################################
