@@ -32,7 +32,7 @@ def plot_curve(pred,gt,vo_result,id_name):
     print(vo_pred_loss_list,np.sum(vo_pred_loss_list))
 
 
-tasks_list = ['f', 'b', 'r', 'l']
+tasks_list = ['f', 'r', 'l', 'b']
 ground_list = ["rug_rand", "grid", "color_dots", 'grass_rand']
 plot_ground_list = ["Rug", "Grid", "Color dots", 'Grass']
 label_list = ['dx', 'dy', 'dz', 'roll', 'pitch', 'yaw']
@@ -43,7 +43,7 @@ USE_MEDIAN_AND_RANGE = False
 # mode_list = [0, 20, 33, 52] # sin, action-only, IMU input
 
 mode_name = ["sin", "action-only", "IMU only", "ours"]
-mode_list = [101] # sin, action-only, IMU input
+mode_list = [103] # sin, action-only, IMU input
 
 
 # fig = plt.figure(figsize=(8, 4))
@@ -57,7 +57,7 @@ for ground_id in range(1):
         rsquare_std = []
         score_mean = []
         score_std = []
-        for task_id in range(1):
+        for task_id in range(2,3):
             task = tasks_list[task_id]
             if mode == 0:
                 d_path = folder_name + "/baselines"

@@ -167,14 +167,14 @@
         xyz="2.77555756156289E-17 -0.0157761500765907 0.0474773983105136"
         rpy="0 0 0" />
       <mass
-        value="0.141254271685154" />
+        value="0.0831925653721974" />
       <inertia
-        ixx="0.000416559633615452"
-        ixy="-1.66018457661843E-19"
-        ixz="9.48676900924816E-20"
-        iyy="5.44190175587167E-05"
-        iyz="6.08030153794323E-05"
-        izz="0.000394411456477929" />
+        ixx="6.18699908273782E-05"
+        ixy="2.5410988417629E-21"
+        ixz="1.01643953670516E-20"
+        iyy="4.2825711220069E-05"
+        iyz="1.80609050865785E-05"
+        izz="4.61612171497649E-05" />
     </inertial>
     <visual>
       <origin
@@ -182,7 +182,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://broken_feet/meshes/32.STL" />
+          filename="package://broken_feet/meshes/02.STL" />
       </geometry>
       <material
         name="">
@@ -196,7 +196,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://broken_feet/meshes/32.STL" />
+          filename="package://broken_feet/meshes/02.STL" />
       </geometry>
     </collision>
   </link>
@@ -689,14 +689,14 @@
         xyz="5.55111512312578E-17 -0.0532160764699448 0.0531179899870653"
         rpy="0 0 0" />
       <mass
-        value="0.0831925653721974" />
+        value="0.141254271685154" />
       <inertia
-        ixx="6.18699908273782E-05"
-        ixy="2.5410988417629E-21"
-        ixz="1.01643953670516E-20"
-        iyy="4.2825711220069E-05"
-        iyz="1.80609050865785E-05"
-        izz="4.61612171497649E-05" />
+        ixx="0.000416559633615452"
+        ixy="-1.66018457661843E-19"
+        ixz="9.48676900924816E-20"
+        iyy="5.44190175587167E-05"
+        iyz="6.08030153794323E-05"
+        izz="0.000394411456477929" />
     </inertial>
     <visual>
       <origin
@@ -704,7 +704,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://broken_feet/meshes/02.STL" />
+          filename="package://broken_feet/meshes/32.STL" />
       </geometry>
       <material
         name="">
@@ -718,7 +718,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://broken_feet/meshes/02.STL" />
+          filename="package://broken_feet/meshes/32.STL" />
       </geometry>
     </collision>
   </link>

@@ -75,6 +75,89 @@ def data_collection(env, steps, parameters, GAUSSIAN, save_path='./', noise=0.1)
     print('Data Collected: ' + str(len(data[0])) + ' steps')
     return data
 
+# Use data collection
+def use_vo_collect_data(vo_model, env, steps, parameters, GAUSSIAN, save_path='./', noise=0.1,frozen_joint = []):
+    S, A, NS, DONE, VO = [], [], [], [], []
+    ti = 0
+    fail_flag = 0
+    s = env.reset()
+
+
+    for i in range(steps):
+
+        a = sin_move(ti, parameters)  # walking gait.
+        if GAUSSIAN == 1:
+            a = np.random.normal(loc=a, scale=[noise,
+                                               noise,
+                                               noise,
+                                               noise,
+                                               noise,
+                                               noise,
+                                               noise,
+                                               noise,
+                                               noise,
+                                               noise,
+                                               noise,
+                                               noise], size=None)
+            np.clip(a, -1, 1).astype(np.float32)
+        # if len(frozen_joint) > 0:
+        #     a[frozen_joint] = 0
+        ns, r, done, _ = env.step(a)  # ns == next state
+
+        ov_IMGs = np.copy(env.ov_input)
+        ov_IMGs = np.asarray(ov_IMGs) / 255
+
+
+        ov_IMGs = torch.from_numpy(ov_IMGs.astype(np.float32)).to(device)
+
+        ov_IMGs = ov_IMGs.unsqueeze(0)
+        vo_result = vo_model.forward(ov_IMGs)
+        vo_result = vo_result.cpu().detach().numpy()
+
+        for kk in range(6):
+            vo_result[:,kk] /= xx2[kk]
+            vo_result[:,kk] = np.add(vo_result[:,kk], xx1[kk])
+
+        S.append(s)
+        A.append(a)
+        NS.append(ns)
+        VO.append(vo_result[0])
+
+        if ti == 99 or (i + 1) == steps:
+            done = True
+        DONE.append(done)
+
+        # if i ==50:
+        #     for cl in range(6):
+        #         ns_array = np.asarray(NS)
+        #         vo_array = np.asarray(VO)
+        #         plt.plot(range(51),ns_array[:,cl],c = 'red')
+        #         plt.plot(range(51),vo_array[:,cl],c = 'green')
+        #         plt.show()
+
+        s = ns
+        ti += 1
+
+        if done == True:
+            s = env.reset()
+            ti = 0
+
+    S = np.array(S).astype(np.float32)
+    A = np.array(A).astype(np.float32)
+    NS = np.array(NS).astype(np.float32)
+    DONE = np.array(DONE).astype(np.float32)
+
+
+    np.savetxt(save_path + 'S.csv', S)
+    np.savetxt(save_path + 'A.csv', A)
+    np.savetxt(save_path + 'NS.csv', NS)
+    np.savetxt(save_path + 'DONE.csv', DONE)
+    np.savetxt(save_path + 'OV_data.csv', VO)
+
+    data = [S, A, NS]
+    print('Data Collected: ' + str(len(data[0])) + ' steps')
+    return data
+
 
 class ImgData2(Dataset):
     def __init__(self, mode, num_data, info, data_path, transform=None, input_previous_action=False):
@@ -146,11 +229,13 @@ class ImgData2(Dataset):
 
         if BLUR_IMG == True:
             if random.randint(0, 1) == 1:
+                # cv2.imshow('IMG_origin',np.hstack((img[0],img[1],img[2],img[3],img[4])))
                 sig_r_xy = random.uniform(0.1, 5)
                 win_r = 2 * random.randint(1, 20) + 1
                 img = cv2.GaussianBlur(img, (win_r, win_r), sigmaX=sig_r_xy, sigmaY=sig_r_xy,
                                        borderType=cv2.BORDER_DEFAULT)
-
+                # cv2.imshow('IMG_Blurring', np.hstack((img[0], img[1], img[2], img[3], img[4])))
+                # cv2.waitKey(0)
             IMG = torch.from_numpy(img).to(device, dtype=torch.float)
 
             if random.randint(0, 1) == 1:
@@ -252,62 +337,6 @@ class ImgData3(Dataset):
         return IMG
 
 
-def process_data_Fast_Feq(data, data_range, batch_size=128, input_previous_action=False, random=True):
-    A, NS, DONE = data
-    A = np.array(A).astype(np.float32)
-    NS = np.array(NS).astype(np.float32)
-    DONE = np.array(DONE).astype(np.float32)
-    Canc_IMGs, As, Ss, Ns = [], [], [], []
-
-    print(len(DONE))
-
-    for pack_id in range(data_range[0], data_range[1]):
-        root_dir = dataset_path + "%d/" % pack_id
-
-        for sub_idx in range(1000):
-            img_pack = []
-            pack_real_id = pack_id - data_range[0]
-
-            if BLACK_IMAGE == False:
-                if DONE[pack_real_id * 1000 + sub_idx - 1] == True or sub_idx == 0:
-                    img_path0 = root_dir + "frames/%d.png" % (sub_idx * 6)
-                    img_pack.append([plt.imread(img_path0)] * 5)
-                else:
-                    for i in range(1, 6):
-                        img_path0 = root_dir + "frames/%d.png" % ((sub_idx - 1) * 6 + i)
-                        img_pack.append(plt.imread(img_path0))
-                IMG = np.asarray(img_pack)
-            else:
-                IMG = np.zeros((5, 128, 128)).astype(np.float32)
-
-            # [:, :, :1]
-            if len(IMG.shape) == 4:
-                IMG = IMG.squeeze()
-
-            Canc_IMGs.append(IMG)
-
-            if input_previous_action == True:
-                action_data = np.concatenate((A[pack_real_id * 1000 + sub_idx - 1], A[pack_real_id * 1000 + sub_idx]))
-
-            else:
-                action_data = A[pack_real_id * 1000 + sub_idx]
-
-            As.append(action_data)
-            Ns.append(NS[pack_real_id * 1000 + sub_idx][:6])
-
-    As, Ns = np.array(As), np.array(Ns)
-    Canc_IMGs = np.array(Canc_IMGs)
-    if random:
-        p = np.random.permutation(len(Canc_IMGs))
-        As, Ns = As[p], Ns[p]
-        Canc_IMGs = Canc_IMGs[p]
-
-    Canc_IMGs = np.array_split(Canc_IMGs, len(Canc_IMGs) / batch_size)
-    As = np.array_split(As, len(As) / batch_size)
-    Ns = np.array_split(Ns, len(Ns) / batch_size)
-    batches = [(Canc_IMGs[i], As[i], Ns[i]) for i in range(len(Ns)) if len(Canc_IMGs[i]) == len(As[i]) == len(Ns[i])]
-
-    return batches
 
 
 def test_model(model, env, parameters, save_flag, step_num=100, epoisde_times=10, num_traj=50, noise=0.05,
@@ -390,7 +419,8 @@ def test_model(model, env, parameters, save_flag, step_num=100, epoisde_times=10
             # Define Object Function to Compute Rewards
 
             if TASK == "f":
-                all_a_rewards = 2*pred_ns_numpy[:,1] - abs(pred_ns_numpy[:,0])
+
+                all_a_rewards = 10 * pred_ns_numpy[:, 1] - 20 * abs(pred_ns_numpy[:, 5]) - 5 * abs(pred_ns_numpy[:, 0])
                 # all_a_rewards = 20 * pred_ns_numpy[:, 1] - 10 * abs(cur_theta + pred_ns_numpy[:, 5]) - 5 * abs(
                 #     cur_p[0] + pred_ns_numpy[:, 0])  # - 5 * abs(pred_ns_numpy[:, 0])
             elif TASK == "l":
@@ -824,6 +854,8 @@ def resiliency_test(model, env, parameters, save_flag, step_num=100, epoisde_tim
         choose_a = [0] * 12
         cur_p = [0] * 3
         cur_theta = 0
+        # tmp_value = []
+        # tmp_value_a = []
         for step in range(step_num):
             a = sin_move(step, parameters)
             A_array = np.asarray([a] * num_traj)
@@ -875,8 +907,7 @@ def resiliency_test(model, env, parameters, save_flag, step_num=100, epoisde_tim
 
             if TASK == "f":
                 # all_a_rewards = 20 * pred_ns_numpy[:, 1] - 10 * abs(pred_ns_numpy[:, 0])
-                all_a_rewards = 20 * pred_ns_numpy[:, 1] - 10 * abs(cur_theta + pred_ns_numpy[:, 5]) - 5 * abs(
-                    cur_p[0] + pred_ns_numpy[:, 0])  # - 5 * abs(pred_ns_numpy[:, 0])
+                all_a_rewards = 10 * pred_ns_numpy[:, 1] - 20 * abs(pred_ns_numpy[:, 5]) - 5 * abs(pred_ns_numpy[:, 0])
             elif TASK == "l":
                 all_a_rewards = pred_ns_numpy[:, 5]  # - abs(cur_p[1] + pred_ns_numpy[:,1]) - abs(cur_p[0] + pred_ns_numpy[:,0])
             elif TASK == "r":
@@ -908,6 +939,9 @@ def resiliency_test(model, env, parameters, save_flag, step_num=100, epoisde_tim
                 choose_a[frozen_joint] = 0
             obs, r_step, done, _ = env.step(choose_a)
             log_action.append(choose_a)
+            # tmp_value.append(obs[6:])
+            # tmp_value_a.append(choose_a)
+
 
             real_reward += r_step
             gt = obs[:6]
@@ -916,7 +950,7 @@ def resiliency_test(model, env, parameters, save_flag, step_num=100, epoisde_tim
             log_pred.append(pred)
             ori_log, pos_log = env.robot_location()
             vo_result_log.append(vo_result[0])
-            print(ori_log, pos_log)
+            # print(ori_log, pos_log)
             rob_pos_ori.append(np.concatenate((ori_log, pos_log)))
 
             img = env.image_stream
@@ -932,7 +966,12 @@ def resiliency_test(model, env, parameters, save_flag, step_num=100, epoisde_tim
                 break
             else:
                 log_done.append(0)
-
+        # tmp_value = np.asarray(tmp_value)
+        # tmp_value_a = np.asarray(tmp_value_a)
+        # for i in range(12):
+        #     plt.plot(tmp_value[:,i])
+        #     plt.plot(tmp_value_a[:,i])
+        #     plt.show()
         log_results.append(real_reward)
 
     np.savetxt(test_log_path + '/data/pred.csv', np.asarray(log_pred))
@@ -951,10 +990,10 @@ def resiliency_test(model, env, parameters, save_flag, step_num=100, epoisde_tim
 
 
 if __name__ == '__main__':
-    robot_idx = 1
-    # name = 'V%03d_cam' % robot_idx
+    robot_idx = 0
+    name = 'V%03d_cam' % robot_idx
     # print(name)
-    name = "broken_feet"
+    # name = "broken_feet"
 
     # sin_para = np.loadtxt("traj_optim/dataset/V000_sin_para.csv")
     sin_para = np.loadtxt("CADandURDF/robot_repo/V000_cam/0.csv")
@@ -962,8 +1001,9 @@ if __name__ == '__main__':
     # 2 Train VSM
     # 3 Train OV
     # 4 Test
-    # 5 Dataset evaluation
-    RUN_PROGRAM = 1
+    # 5 Res Test
+    # 6 Use VO collect data.
+    RUN_PROGRAM = 6
     RAND_FIRCTION = True
     RAND_T = True
     RAND_P = True
@@ -986,7 +1026,7 @@ if __name__ == '__main__':
         env.data_collection = True
         offline_data_path = "C:/visual_project_data/"
         # offline_data_path = "D:/visual_project_data/"
-        start_id = 45
+        start_id = 95
         start_end = range(start_id, start_id + 5)
         data_num = 1  #
         noise = 0.2
@@ -1016,11 +1056,11 @@ if __name__ == '__main__':
             data_collection(env, steps=int(data_num * 1000), parameters=sin_para, GAUSSIAN=1, noise=noise, save_path=sp)
     # Train VSM
     elif RUN_PROGRAM == 2:
-        mode_name = "mode103"
+        mode_name = "mode101_(res50)"
         pre_trained_model = True
-        pre_trained_model_path = "C:/Users/yuhan/Downloads/Egocentric_VSM/train/mode101/best_model.pt"
-        dataset_path = "C:/visual_project_data/data_package1/V000_cam_n0.2_mix4/"
-        num_data = 1000
+        pre_trained_model_path = "train/mode101/best_model.pt"
+        dataset_path = "C:/visual_project_data/data_package1/broken_feet_n0.2_mix0819/"
+        num_data = 50
         batch_size = 16
         NORM = True
         PRE_A = True
@@ -1095,9 +1135,9 @@ if __name__ == '__main__':
         p.setAdditionalSearchPath(pd.getDataPath())
         GROUND_list = ['rug_rand', 'grid', 'color_dots', 'grass_rand']
         TASK_list = ['f', 'r', 'l', 'b']
-        for i in range(4):
-            for j in range(4):
-                idx_num = 101
+        for i in range(1):
+            for j in range(1):
+                idx_num = 103
 
                 GROUND = GROUND_list[i]
                 TASK = TASK_list[j]
@@ -1164,8 +1204,8 @@ if __name__ == '__main__':
         GROUND_list = ['rug_rand', 'grid', 'color_dots', 'grass_rand']
         TASK_list = ['f', 'r', 'l', 'b']
         for i in range(1):
-            for j in range(1):
-                idx_num = 101
+            for j in range(2,3):
+                idx_num = "103"
                 vo_model = "vo1"
 
                 GROUND = GROUND_list[i]
@@ -1184,7 +1224,7 @@ if __name__ == '__main__':
                 else:
                     num_output = 6
 
-                load_trained_model_path = "train/mode%d/best_model.pt" % idx_num
+                load_trained_model_path = "train/mode%s/best_model.pt" % idx_num
                 VO_load_trained_model_path = "train/%s/best_model.pt" % vo_model
                 scale_coff = np.loadtxt("norm_dataset_V000_cam_n0.2_mix4.csv")
                 xx1, xx2 = scale_coff[0], scale_coff[1]
@@ -1210,7 +1250,7 @@ if __name__ == '__main__':
 
                 env.sleep_time = 0.
                 env.data_collection = True
-                test_log_path = "res_test/test%d_%s_%s/" % (idx_num, TASK, GROUND)
+                test_log_path = "res_test/test%s_%s_%s/" % (idx_num, TASK, GROUND)
 
                 try:
                     os.mkdir(test_log_path)
@@ -1227,7 +1267,62 @@ if __name__ == '__main__':
                                 step_num=56,
                                 save_flag=False,
                                 input_pre_a=PRE_A,
-                                frozen_joint = [])
+                                frozen_joint = [0])
 
-                ####-----------------------------------####
-                ###########################################
+    # use vo moel to collect data
+    if RUN_PROGRAM == 6:
+        # data collection
+        p.connect(p.DIRECT)
+        p.setAdditionalSearchPath(pd.getDataPath())
+        # mix2 is the previous action space 0.4,0.2,0.2
+        # mix3 is the constrained action space all 0.2 noise
+        folder_name = 'frozen'
+        env = OpticalEnv(name, robot_camera=True,
+                         urdf_path="../CADandURDF/robot_repo/%s/urdf/%s.urdf" % (name, name),
+                         rand_fiction=RAND_FIRCTION,
+                         rand_torque=RAND_T,
+                         rand_pos=RAND_P,
+                         CONSTRAIN=False)
+        env.sleep_time = 0
+        env.data_collection = True
+        offline_data_path = "C:/visual_project_data/"
+        # offline_data_path = "D:/visual_project_data/"
+        start_id = 10
+        start_end = range(start_id, start_id + 5)
+        data_num = 1  #
+        noise = 0.2
+        data_type = "%s_n%s_%s/" % (name, str(noise), folder_name)
+        vo_model = 'vo1'
+        data_logger_folder = offline_data_path + "data_package1/" + data_type
+
+        VO_load_trained_model_path = "train/%s/best_model.pt" % vo_model
+        scale_coff = np.loadtxt("norm_dataset_V000_cam_n0.2_mix4.csv")
+        xx1, xx2 = scale_coff[0], scale_coff[1]
+
+        vo_model = OV_Net(ACTIVATED_F = 'L',img_channel = 7,  num_classes=6, normalization=True).to(device)
+        vo_model.load_state_dict(torch.load(VO_load_trained_model_path, map_location=torch.device(device)))
+        vo_model.to(device)
+        vo_model.eval()
+
+        try:
+            os.mkdir(data_logger_folder)
+        except OSError:
+            pass
+        ground_list = ["grass_rand", "rug_rand", "color_dots", "grid"]
+        for pack_idx in start_end:
+            select_g = pack_idx % 4
+
+            env.ground_type = ground_list[select_g]
+
+            print(pack_idx, select_g)
+            sp = data_logger_folder + "%d/" % pack_idx
+            sp_frame = data_logger_folder + "%d/" % pack_idx + "frames/"
+            try:
+                os.mkdir(sp)
+                os.mkdir(sp_frame)
+            except OSError:
+                pass
+            env.robot_view_path = sp_frame
+            env.counting = 0
+            use_vo_collect_data(vo_model,env, steps=int(data_num * 1000), parameters=sin_para, GAUSSIAN=1, noise=noise, save_path=sp,
+                                frozen_joint=[])
