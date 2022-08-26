@@ -10,9 +10,9 @@ class VSM_Env():
     def __init__(self, episode_len=300, debug=0):
         # Socket Conneciton
         # MAC find WiFi IP - ipconfig getifaddr en0
-        HOST = '192.168.0.100'
+        HOST = '192.168.0.85'
         # Port to listen on (non-privileged ports are > 1023)
-        PORT = 2059
+        PORT = 2058
 
         print('Connected')
 
@@ -82,7 +82,6 @@ class VSM_Env():
 
 def get_img_data(ti):
     while True:
-
         frames = pipeline.poll_for_frames()
         if not frames:
             continue
@@ -105,7 +104,7 @@ def apply_model(i,IMGs,choose_a,cur_theta):
     scalse_noise = np.asarray([noise,
                                noise,
                                noise,
-                               noise ,
+                               noise,
                                noise,
                                noise,
                                noise,
@@ -192,7 +191,7 @@ def apply_SinGait(ti,noise_f = False):
 
 if __name__ == '__main__':
 
-    mode_num = 42
+    model_type = "103"
     TASK = "r"
     noise = 0.2
     PRE_A = True
@@ -205,9 +204,9 @@ if __name__ == '__main__':
 
     dim = (128,128)
     # Load model
-    load_trained_model_path = "../train/mode%d/best_model.pt" % mode_num
-    scale_coff = np.loadtxt("../norm_dataset_V000_cam_n0.2_mix3.csv")
-    sin_para = np.loadtxt("../CADandURDF/robot_repo/V000_cam/1.csv")
+    load_trained_model_path = "../train/mode%s/best_model.pt" % model_type
+    scale_coff = np.loadtxt("../norm_dataset_V000_cam_n0.2_mix4.csv")
+    sin_para = np.loadtxt("../CADandURDF/robot_repo/V000_cam/0.csv")
 
     xx1, xx2 = scale_coff[0], scale_coff[1]
     from ResNet_RNN import *
@@ -223,7 +222,7 @@ if __name__ == '__main__':
 
     # Construct MAIN SERVER object
     env = VSM_Env(episode_len=50,debug=0)
-    save_path_realdata = "%s_%d" % (name,mode_num)
+    save_path_realdata = "%s_%s" % (name,model_type)
 
     try:
         os.mkdir(save_path_realdata)
@@ -256,7 +255,7 @@ if __name__ == '__main__':
 
         # From visual_self-model:
 
-        IMGs,choose_a,pred  = apply_model(i, IMGs, choose_a, cur_theta)
+        IMGs, choose_a, pred = apply_model(i, IMGs, choose_a, cur_theta)
         cur_theta += pred[5]
         print("cur:",cur_theta)
         log_pred.append(pred)

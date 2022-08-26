@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from scipy.stats import pearsonr
 
 folder_name = '../res_test/'
+sub_folder_name ="test103_(res50_frozen)_f_rug_rand/"
 
 
 def plot_curve(pred,gt,vo_result,id_name):
@@ -10,8 +11,8 @@ def plot_curve(pred,gt,vo_result,id_name):
     for i in range(len(pred[0])):
         plt.figure(figsize = (4,4))
         plt.plot(range(len(gt)),gt[:,i],label = 'gt',linewidth = 2, alpha=0.3,c = 'r',)
-        # plt.plot(range(len(gt)),pred[:,i],label = 'pred',c = 'g')
-        plt.plot(range(len(gt)-1),vo_result[1:,i],label = 'vo',c = 'b')
+        plt.plot(range(len(gt)),pred[:,i],label = 'pred',c = 'g')
+        # plt.plot(range(len(gt)-1),vo_result[1:,i],label = 'vo',c = 'b')
         # min_y = np.min(gt[:,i])
         # max_y = np.max(min_y/2)
         # plt.vlines(done_list, ymin =min_y, ymax=max_y,label = "done")
@@ -57,12 +58,13 @@ for ground_id in range(1):
         rsquare_std = []
         score_mean = []
         score_std = []
-        for task_id in range(2,3):
+        for task_id in range(1):
             task = tasks_list[task_id]
             if mode == 0:
                 d_path = folder_name + "/baselines"
             else:
-                d_path = folder_name + "/test%d_%s_%s" % (mode, task, ground_list[ground_id])
+                # d_path = folder_name + "/test%d_%s_%s" % (mode, task, ground_list[ground_id])
+                d_path = folder_name + sub_folder_name
 
             gt = np.loadtxt(d_path + "/data/gt.csv")[56*st_peroid:56*end_peroid]
             vo_result = np.loadtxt(d_path + "/data/vo_result.csv")[56*st_peroid:56*end_peroid]

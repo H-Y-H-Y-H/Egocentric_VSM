@@ -100,8 +100,8 @@ def use_vo_collect_data(vo_model, env, steps, parameters, GAUSSIAN, save_path='.
                                                noise,
                                                noise], size=None)
             np.clip(a, -1, 1).astype(np.float32)
-        # if len(frozen_joint) > 0:
-        #     a[frozen_joint] = 0
+        if len(frozen_joint) > 0:
+            a[frozen_joint] = 0
         ns, r, done, _ = env.step(a)  # ns == next state
 
         ov_IMGs = np.copy(env.ov_input)
@@ -906,8 +906,9 @@ def resiliency_test(model, env, parameters, save_flag, step_num=100, epoisde_tim
             # Define Object Function to Compute Rewards
 
             if TASK == "f":
-                # all_a_rewards = 20 * pred_ns_numpy[:, 1] - 10 * abs(pred_ns_numpy[:, 0])
-                all_a_rewards = 10 * pred_ns_numpy[:, 1] - 20 * abs(pred_ns_numpy[:, 5]) - 5 * abs(pred_ns_numpy[:, 0])
+                # all_a_rewards = 20 * pred_ns_numpy[:, 1] - 2 * abs(pred_ns_numpy[:, 5]) - 5 * abs(pred_ns_numpy[:, 0])
+                # all_a_rewards =  20 * pred_ns_numpy[:, 1] - 3 * abs(pred_ns_numpy[:, 0]) - 1 * abs(pred_ns_numpy[:, 5]) #res_broken
+                all_a_rewards = 3 * pred_ns_numpy[:, 1] - 2*abs(pred_ns_numpy[:, 5]) - 1 * abs(pred_ns_numpy[:, 0])
             elif TASK == "l":
                 all_a_rewards = pred_ns_numpy[:, 5]  # - abs(cur_p[1] + pred_ns_numpy[:,1]) - abs(cur_p[0] + pred_ns_numpy[:,0])
             elif TASK == "r":
@@ -991,9 +992,9 @@ def resiliency_test(model, env, parameters, save_flag, step_num=100, epoisde_tim
 
 if __name__ == '__main__':
     robot_idx = 0
-    name = 'V%03d_cam' % robot_idx
+    # name = 'V%03d_cam' % robot_idx
     # print(name)
-    # name = "broken_feet"
+    name = "broken_feet"
 
     # sin_para = np.loadtxt("traj_optim/dataset/V000_sin_para.csv")
     sin_para = np.loadtxt("CADandURDF/robot_repo/V000_cam/0.csv")
@@ -1003,7 +1004,7 @@ if __name__ == '__main__':
     # 4 Test
     # 5 Res Test
     # 6 Use VO collect data.
-    RUN_PROGRAM = 6
+    RUN_PROGRAM = 2
     RAND_FIRCTION = True
     RAND_T = True
     RAND_P = True
@@ -1054,12 +1055,16 @@ if __name__ == '__main__':
             env.robot_view_path = sp_frame
             env.counting = 0
             data_collection(env, steps=int(data_num * 1000), parameters=sin_para, GAUSSIAN=1, noise=noise, save_path=sp)
-    # Train VSM
+    # Train VSM or fine-tuning VSM
     elif RUN_PROGRAM == 2:
-        mode_name = "mode101_(res50)"
+        mode_name = "mode103_(res50_broken)"
+        dataset_path = "C:/visual_project_data/data_package1/broken_feet_n0.2_broken/"
+
+        # mode_name = "mode103_(res50_frozen)"
+        # dataset_path = "C:/visual_project_data/data_package1/V000_cam_n0.2_frozen/"
+
         pre_trained_model = True
-        pre_trained_model_path = "train/mode101/best_model.pt"
-        dataset_path = "C:/visual_project_data/data_package1/broken_feet_n0.2_mix0819/"
+        pre_trained_model_path = "train/mode103/best_model.pt"
         num_data = 50
         batch_size = 16
         NORM = True
@@ -1072,8 +1077,7 @@ if __name__ == '__main__':
         BLUR_IMG = True
         scale_coff = np.loadtxt("norm_dataset_V000_cam_n0.2_mix4.csv")
         num_output = 6
-        model = ResNet50(ACTIVATED_F, img_channel=5, num_classes=num_output, input_pre_a=PRE_A, normalization=NORM).to(
-            device)
+        model = ResNet50(ACTIVATED_F, img_channel=5, num_classes=num_output, input_pre_a=PRE_A, normalization=NORM).to(device)
 
         # model = ResNet101( ACTIVATED_F,img_channel=5, num_classes=num_output, input_pre_a=PRE_A, normalization=NORM).to(device)
         # model = ResNet152( ACTIVATED_F,img_channel=5, num_classes=num_output, input_pre_a=PRE_A, normalization=NORM).to(device)
@@ -1204,8 +1208,8 @@ if __name__ == '__main__':
         GROUND_list = ['rug_rand', 'grid', 'color_dots', 'grass_rand']
         TASK_list = ['f', 'r', 'l', 'b']
         for i in range(1):
-            for j in range(2,3):
-                idx_num = "103"
+            for j in range(1):
+                idx_num = "103_(res50_frozen)"
                 vo_model = "vo1"
 
                 GROUND = GROUND_list[i]
@@ -1268,7 +1272,6 @@ if __name__ == '__main__':
                                 save_flag=False,
                                 input_pre_a=PRE_A,
                                 frozen_joint = [0])
-
     # use vo moel to collect data
     if RUN_PROGRAM == 6:
         # data collection
@@ -1287,7 +1290,7 @@ if __name__ == '__main__':
         env.data_collection = True
         offline_data_path = "C:/visual_project_data/"
         # offline_data_path = "D:/visual_project_data/"
-        start_id = 10
+        start_id = 45
         start_end = range(start_id, start_id + 5)
         data_num = 1  #
         noise = 0.2
@@ -1325,4 +1328,4 @@ if __name__ == '__main__':
             env.robot_view_path = sp_frame
             env.counting = 0
             use_vo_collect_data(vo_model,env, steps=int(data_num * 1000), parameters=sin_para, GAUSSIAN=1, noise=noise, save_path=sp,
-                                frozen_joint=[])
+                                frozen_joint=[0])
