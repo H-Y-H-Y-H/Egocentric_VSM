@@ -10,9 +10,9 @@ class VSM_Env():
     def __init__(self, episode_len=300, debug=0):
         # Socket Conneciton
         # MAC find WiFi IP - ipconfig getifaddr en0
-        HOST = '192.168.0.85'
+        HOST = '192.168.0.102'
         # Port to listen on (non-privileged ports are > 1023)
-        PORT = 2058
+        PORT = 8888
 
         print('Connected')
 
@@ -137,7 +137,8 @@ def apply_model(i,IMGs,choose_a,cur_theta):
 
     # Task_select
     if TASK == "f":
-        all_a_rewards = (10 * pred_ns_numpy[:, 1]- 10 * abs(cur_theta + pred_ns_numpy[:, 5]) )
+        all_a_rewards = (10 * pred_ns_numpy[:, 1] - 2 * abs(cur_theta + pred_ns_numpy[:, 5]) )
+        # all_a_rewards = (10 * pred_ns_numpy[:, 1] + 5 *(pred_ns_numpy[:, 5]) - 1*(pred_ns_numpy[:, 0]))
     elif TASK == "l":
         all_a_rewards = 100 * np.pi - abs((np.pi / 2 - cur_theta) - pred_ns_numpy[:, 5]) * 100
         # all_a_rewards = 10 - (np.pi / 2 - pred_ns_numpy[:, 5]) ** 2
@@ -169,7 +170,9 @@ def apply_model(i,IMGs,choose_a,cur_theta):
 
     IMGs = []
     for f in range(5):
-        IMGs.append(get_img_data(i*5+f))
+        IMGs.append(get_img_data(i*6+f))
+    get_img_data(i * 6 + 5)
+
     IMGs = np.asarray(IMGs)
     IMGs = torch.from_numpy(IMGs.astype(np.float32)).to(device)
 
@@ -191,8 +194,9 @@ def apply_SinGait(ti,noise_f = False):
 
 if __name__ == '__main__':
 
-    model_type = "103"
-    TASK = "r"
+    model_type = "103_(res100_frozen1)"
+    # model_type = "103"
+    TASK = "f"
     noise = 0.2
     PRE_A = True
     BLACK_IMAGE = False
