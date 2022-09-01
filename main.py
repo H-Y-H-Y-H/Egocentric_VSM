@@ -1004,7 +1004,7 @@ if __name__ == '__main__':
     # 4 Test
     # 5 Res Test
     # 6 Use VO collect data.
-    RUN_PROGRAM = 2
+    RUN_PROGRAM = 6
     RAND_FIRCTION = True
     RAND_T = True
     RAND_P = True
@@ -1135,7 +1135,7 @@ if __name__ == '__main__':
                              scale=NORM)
     # Test VSM
     elif RUN_PROGRAM == 4:
-        p.connect(p.GUI)
+        p.connect(p.DIRECT)
         p.setAdditionalSearchPath(pd.getDataPath())
         GROUND_list = ['rug_rand', 'grid', 'color_dots', 'grass_rand']
         TASK_list = ['f', 'r', 'l', 'b']
@@ -1203,13 +1203,13 @@ if __name__ == '__main__':
                 ###########################################
     # Test recovery
     elif RUN_PROGRAM == 5:
-        p.connect(p.GUI)
+        p.connect(p.DIRECT)
         p.setAdditionalSearchPath(pd.getDataPath())
         GROUND_list = ['rug_rand', 'grid', 'color_dots', 'grass_rand']
         TASK_list = ['f', 'r', 'l', 'b']
         for i in range(1):
             for j in range(1):
-                idx_num = "103_(res50_frozen)"
+                idx_num = "103"
                 vo_model = "vo1"
 
                 GROUND = GROUND_list[i]
@@ -1271,7 +1271,7 @@ if __name__ == '__main__':
                                 step_num=56,
                                 save_flag=False,
                                 input_pre_a=PRE_A,
-                                frozen_joint = [0])
+                                frozen_joint = [])
     # use vo moel to collect data
     if RUN_PROGRAM == 6:
         # data collection
@@ -1279,7 +1279,7 @@ if __name__ == '__main__':
         p.setAdditionalSearchPath(pd.getDataPath())
         # mix2 is the previous action space 0.4,0.2,0.2
         # mix3 is the constrained action space all 0.2 noise
-        folder_name = 'frozen'
+        folder_name = 'broken'
         env = OpticalEnv(name, robot_camera=True,
                          urdf_path="../CADandURDF/robot_repo/%s/urdf/%s.urdf" % (name, name),
                          rand_fiction=RAND_FIRCTION,
@@ -1290,7 +1290,7 @@ if __name__ == '__main__':
         env.data_collection = True
         offline_data_path = "C:/visual_project_data/"
         # offline_data_path = "D:/visual_project_data/"
-        start_id = 45
+        start_id = 0
         start_end = range(start_id, start_id + 5)
         data_num = 1  #
         noise = 0.2

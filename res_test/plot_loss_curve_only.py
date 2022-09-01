@@ -2,12 +2,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import pearsonr
 
-folder_name = '../res_test/'
-sub_folder_name ="test103_(res50_frozen)_f_rug_rand/"
+folder_name = '../res_test/broken_feet/'
+sub_folder_name ="test103_f_rug_rand/"
 
 
 def plot_curve(pred,gt,vo_result,id_name):
     vo_pred_loss_list = []
+    pred_loss_list = []
+    vo_loss_list = []
     for i in range(len(pred[0])):
         plt.figure(figsize = (4,4))
         plt.plot(range(len(gt)),gt[:,i],label = 'gt',linewidth = 2, alpha=0.3,c = 'r',)
@@ -24,13 +26,19 @@ def plot_curve(pred,gt,vo_result,id_name):
         plt.show()
         # plt.savefig("../plots/%s_%s"%(label_list[i],id_name))
         R_value, _ = pearsonr(gt[:, i], pred[:, i])
-        loss= np.linalg.norm(gt[:, i]-pred[:,i])
-        print("VSM:",R_value, loss)
+        pred_loss= np.mean((gt[:, i]-pred[:,i])**2)
+        print("VSM:",R_value, pred_loss)
         R_value, _ = pearsonr(gt[:-1, i], vo_result[1:, i])
-        loss= np.linalg.norm(gt[:-1, i]-vo_result[1:, i])
-        print("VO:", R_value, loss)
-        vo_pred_loss_list.append(np.linalg.norm(vo_result[1:, i]-pred[:-1,i]))
-    print(vo_pred_loss_list,np.sum(vo_pred_loss_list))
+        vo_loss= np.mean((gt[:-1, i]-vo_result[1:, i])**2)
+        print("VO:", R_value, vo_loss)
+
+        vo_pred_loss = np.mean((pred[:-1, i] - vo_result[1:, i]) ** 2)
+
+        pred_loss_list.append(pred_loss)
+        vo_loss_list.append(vo_loss)
+
+        vo_pred_loss_list.append(vo_pred_loss)
+    print(np.mean(pred_loss_list),np.mean(vo_loss_list),np.mean(vo_pred_loss_list))
 
 
 tasks_list = ['f', 'r', 'l', 'b']
