@@ -10,7 +10,7 @@ class VSM_Env():
     def __init__(self, episode_len=300, debug=0):
         # Socket Conneciton
         # MAC find WiFi IP - ipconfig getifaddr en0
-        HOST = '192.168.0.102'
+        HOST = '192.168.0.225'
         # Port to listen on (non-privileged ports are > 1023)
         PORT = 8888
 
@@ -59,7 +59,7 @@ class VSM_Env():
 
     def get_msg_from_pi(self):
         # Robot state is returned by reading from the motors
-        self.robot_state = np.frombuffer(self.conn.recv(1024), dtype=np.float32)
+        self.robot_state = np.frombuffer(self.conn.recv(128), dtype=np.float32)
         return np.array(list(self.robot_state), dtype=np.float32)
 
     def step(self, cmds):
@@ -137,7 +137,8 @@ def apply_model(i,IMGs,choose_a,cur_theta):
 
     # Task_select
     if TASK == "f":
-        all_a_rewards = (10 * pred_ns_numpy[:, 1] - 2 * abs(cur_theta + pred_ns_numpy[:, 5]) )
+        # all_a_rewards = (10 * pred_ns_numpy[:, 1] - 2 * abs(cur_theta + pred_ns_numpy[:, 5]) )
+        all_a_rewards = (10 * pred_ns_numpy[:, 1] - 2 * abs( pred_ns_numpy[:, 5]))
         # all_a_rewards = (10 * pred_ns_numpy[:, 1] + 5 *(pred_ns_numpy[:, 5]) - 1*(pred_ns_numpy[:, 0]))
     elif TASK == "l":
         all_a_rewards = 100 * np.pi - abs((np.pi / 2 - cur_theta) - pred_ns_numpy[:, 5]) * 100
@@ -171,7 +172,9 @@ def apply_model(i,IMGs,choose_a,cur_theta):
     IMGs = []
     for f in range(5):
         IMGs.append(get_img_data(i*6+f))
+        print("f%d" % f, end=" ")
     get_img_data(i * 6 + 5)
+    print("f")
 
     IMGs = np.asarray(IMGs)
     IMGs = torch.from_numpy(IMGs.astype(np.float32)).to(device)
@@ -180,23 +183,56 @@ def apply_model(i,IMGs,choose_a,cur_theta):
 
 
 def apply_SinGait(ti,noise_f = False):
-    action = sin_move(i, sin_para)
+    action = sin_move(ti, sin_para)
     if noise_f == True:
         action = np.random.normal(loc=action, scale=0.2, size=None)
         action = np.clip(action, -1, 1)
 
     for f in range(5):
-        get_img_data(i*5+f)
-
+        get_img_data(ti*5+f)
     return action
+
+def rw_data_collection(steps = 1000):
+    S, A, NS, DONE = [], [], [], []
+    ti = 0
+    time0 = time.time()
+    for i in range(steps):
+
+        print(i)
+        a = sin_move(ti,para=sin_para)
+        a = np.random.normal(loc=a, scale=noise, size=None)
+        a = np.clip(a, -1, 1)
+        obs, r, done, _ = env.step(a)
+        IMGs = []
+
+        for f in range(5):
+            IMGs.append(get_img_data(i * 6 + f))
+        get_img_data(i * 6 + 5)
+
+
+        A.append(a)
+
+
+        ti += 1
+
+
+
+        np.savetxt(save_path_realdata + 'A.csv', np.asarray(A).astype(np.float32))
+        np.savetxt(save_path_realdata + 'DONE.csv', np.array(DONE).astype(np.float32))
+
+        time1 = time.time()
+        time_used = time1 - time0
+        time0 = time1
+        if time_used < 0.22:
+            time.sleep(0.22-time_used)
 
 
 
 if __name__ == '__main__':
 
-    model_type = "103_(res100_frozen1)"
+    model_type = "103_broken_recovery_blur"
     # model_type = "103"
-    TASK = "f"
+    TASK = "l"
     noise = 0.2
     PRE_A = True
     BLACK_IMAGE = False
@@ -208,7 +244,7 @@ if __name__ == '__main__':
 
     dim = (128,128)
     # Load model
-    load_trained_model_path = "../train/mode%s/best_model.pt" % model_type
+    load_trained_model_path = "../train/model%s/best_model.pt" % model_type
     scale_coff = np.loadtxt("../norm_dataset_V000_cam_n0.2_mix4.csv")
     sin_para = np.loadtxt("../CADandURDF/robot_repo/V000_cam/0.csv")
 
@@ -226,16 +262,18 @@ if __name__ == '__main__':
 
     # Construct MAIN SERVER object
     env = VSM_Env(episode_len=50,debug=0)
-    save_path_realdata = "%s_%s" % (name,model_type)
+    obs = env.reset()
 
+
+    # Test model
+    save_path_realdata = "%s_%s" % (name,model_type)
     try:
         os.mkdir(save_path_realdata)
         os.mkdir(save_path_realdata+"/img")
     except OSError:
         pass
 
-    # Reset environment
-    obs = env.reset()
+
 
     # Keep track of time for average actions/second calculation
     time0 = time.time()
@@ -248,31 +286,23 @@ if __name__ == '__main__':
     initial_img = initial_img.squeeze()
     cur_theta = 0
 
+
     IMGs = torch.from_numpy(initial_img.astype(np.float32)).to(device)
     log_action = []
     log_pred = []
     log_feedback_pos = []
-    # Walk the robot
+
     for i in range(56):
-        # Timestamp
-        # time_info.append(time.time() - start)
-
         # From visual_self-model:
-
         IMGs, choose_a, pred = apply_model(i, IMGs, choose_a, cur_theta)
         cur_theta += pred[5]
         print("cur:",cur_theta)
         log_pred.append(pred)
         # Sin_Gait:
         # choose_a = apply_SinGait(i, noise_f = True)
-
         obs, r, done, _ = env.step(choose_a)
-        # print(obs)
-        # obs = obs[:24]
 
-        # log_feedback_pos.append(obs)
         log_action.append(choose_a)
-
 
         time1 = time.time()
         time_used = time1 - time0
@@ -286,5 +316,17 @@ if __name__ == '__main__':
     np.savetxt(save_path_realdata+"/action.csv",np.asarray(log_action))
     np.savetxt(save_path_realdata+"/pred.csv",np.asarray(log_pred))
     # np.savetxt(save_path_realdata+"/pos.csv",np.asarray(log_feedback_pos))
-
     pipeline.stop()
+
+
+    # Data Collection in the real wrold
+    # datasetID = '44'
+    # save_path_realdata ="rw_data/%s/" % (datasetID)
+    # try:
+    #     os.mkdir(save_path_realdata)
+    #     os.mkdir(save_path_realdata+"/img")
+    # except OSError:
+    #     pass
+    # rw_data_collection()
+    # pipeline.stop()
+

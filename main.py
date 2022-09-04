@@ -84,7 +84,6 @@ def use_vo_collect_data(vo_model, env, steps, parameters, GAUSSIAN, save_path='.
 
 
     for i in range(steps):
-
         a = sin_move(ti, parameters)  # walking gait.
         if GAUSSIAN == 1:
             a = np.random.normal(loc=a, scale=[noise,
@@ -1272,7 +1271,7 @@ if __name__ == '__main__':
                                 save_flag=False,
                                 input_pre_a=PRE_A,
                                 frozen_joint = [])
-    # use vo moel to collect data
+    # use vo model to collect data
     if RUN_PROGRAM == 6:
         # data collection
         p.connect(p.DIRECT)
