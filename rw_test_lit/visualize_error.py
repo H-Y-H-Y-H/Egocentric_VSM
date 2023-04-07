@@ -55,7 +55,8 @@ def plot_curve(vo,vsm,n_vo,n_vsm):
 
 if __name__ == '__main__':
 
-    n_data_folder = "V000_103_normal2/"
+    # n_data_folder = "V000_103_normal2/"
+    n_data_folder = "break/V000_103/"
     # data_folder = "V000_103_(res50_frozen)/"
     # data_folder = "V000_103_broken_0.051/"
     data_folder = "recovery3_0.021/V000_103_broken_recovery_blur/"
