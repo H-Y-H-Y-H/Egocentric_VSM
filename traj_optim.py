@@ -131,9 +131,11 @@ def play_back(env, para, noise,epoch_num, step_num=100):
             print("state:", env.robot_location())
 
 
-def trajectory_optimization(env,save_path, para=None, Train=False, noise=0.0):
+def trajectory_optimization(env,save_path,render_flag = None, para=None, Train=False, noise=0.0):
     # Search Parameters
     if Train:
+        if render_flag == True:
+            env.render = True
         env.camera_capture = False
         env.robot_camera = False
 
@@ -146,54 +148,24 @@ def trajectory_optimization(env,save_path, para=None, Train=False, noise=0.0):
 
 
 if __name__ == '__main__':
-    #0-10: 0.1
-    # result += obs[1] * 50 \
-    #           - 2 * abs(robot_ori[0]) \
-    #           - 2 * abs(robot_ori[1]) \
-    #           - 5 * abs(robo_pos[2] - 0.1629)
-    # 7 channel: no random pos and random torque and random friction but have 0.2 noise and test only once.
-    # 8-15 channel: Test 20 times with all the stuffs
 
-    # 16 - 20: no random pos and random torque and random friction no 0.2 noise and test only once.
-    # 21-25 0.8N m torque
-    # result += obs[1] * 50 \
-    #           - 20 * abs(obs[3]) \
-    #           - 20 * abs(obs[4]) \
-    #           - 20 * abs(obs[0]) \
-    #           - 20 * abs(obs[2]) \
-    #           - 5 * abs(robo_pos[2] - 0.1629)
-
-    TRAIN = False
-    #
+    TRAIN = True
 
 
-
-    num_channel = 22
+    num_channel = 19
     num_file = 2186
 
-    # very good
-    # num_channel = 23
-    # num_file = 1986
+    p.connect(p.DIRECT)
+    p.setAdditionalSearchPath(pd.getDataPath())
 
-    # num_channel = 25
-    # num_file = 2498
-    # num_channel = 21
-    # num_file = 114
-    # num_channel = 20
-    # num_file = 2147
-    if TRAIN:
-        p.connect(p.DIRECT)
-    else:
-        p.connect(p.GUI)
 
     noise = 0
-    name = 'V000_cam'
+    name = 'V800_cam'
     print(name)
     if TRAIN:
-        sin_para = np.loadtxt("traj_optim/dataset/control_para%d/%d.csv" % (18, 2036))
-        # sin_para = np.loadtxt("traj_optim/dataset/0.csv")
+        # sin_para = np.loadtxt("traj_optim/dataset/control_para%d/%d.csv" % (18, 2036))
+        sin_para = np.loadtxt("traj_optim/dataset/0.csv")
     else:
-
         sin_para = np.loadtxt("traj_optim/dataset/control_para%d/%d.csv" % (num_channel, num_file))
         # sin_para = np.loadtxt("traj_optim/dataset/0.csv")
 
@@ -202,18 +174,17 @@ if __name__ == '__main__':
                      robot_camera=False,
                      camera_capture = False,
                      urdf_path="../CADandURDF/robot_repo/%s/urdf/%s.urdf" % (name, name),
-                     CONSTRAIN=True)#,
+                     CONSTRAIN=False)#,
                      # rand_pos= True, rand_torque= True,rand_fiction=True)
     env.sleep_time = 0.
     env.data_collection = True
 
     print("NUM_CHANNEL:",num_channel)
     save_path = "traj_optim/dataset/control_para%d/"%num_channel
-    try:
-        os.mkdir(save_path)
-    except OSError:
-        pass
+    os.makedirs(save_path,exist_ok=True)
+
     trajectory_optimization(env,
+                            render_flag=True,
                             save_path =save_path,
                             para = sin_para,
                             noise = noise,

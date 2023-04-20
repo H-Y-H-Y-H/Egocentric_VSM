@@ -41,15 +41,19 @@ class OpticalEnv(gym.Env):
         self.outer_motor_index = [2, 5, 8, 11]
         self.CONSTRAIN = CONSTRAIN
         self.original_motor_action_space = np.pi/3
-        self.motor_action_space = np.asarray([np.pi / 6, np.pi / 10, np.pi / 10,
-                                              np.pi / 6, np.pi / 10, np.pi / 10,
-                                              np.pi / 6, np.pi / 10, np.pi / 10,
-                                              np.pi / 6, np.pi / 10, np.pi / 10])
 
-        self.motor_action_space_shift = np.asarray([0, -1.2, 1,
-                                                    0.5, -1.2, 1,
-                                                    -0.5, -1.2, 1,
-                                                    0, -1.2, 1])
+        self.motor_action_space = None
+        self.motor_action_space_shift = None
+        # self.motor_action_space = np.asarray([np.pi / 6, np.pi / 10, np.pi / 10,
+        #                                       np.pi / 6, np.pi / 10, np.pi / 10,
+        #                                       np.pi / 6, np.pi / 10, np.pi / 10,
+        #                                       np.pi / 6, np.pi / 10, np.pi / 10])
+        #
+        # self.motor_action_space_shift = np.asarray([0, -1.2, 1,
+        #                                             0.5, -1.2, 1,
+        #                                             -0.5, -1.2, 1,
+        #                                             0, -1.2, 1])
+
         self.log_state = [0, 0, 0, 0, 0, 0]
         self.urdf_path = urdf_path
         self.camera_capture = camera_capture
@@ -160,9 +164,9 @@ class OpticalEnv(gym.Env):
             if self.render:
                 # Capture Camera
                 if self.camera_capture == True:
-                    basePos, baseOrn = p.getBasePositionAndOrientation(self.robotid)  # Get model position
-                    basePos_list = [basePos[0], basePos[1], 0.3]
                     # side view
+                    # basePos, baseOrn = p.getBasePositionAndOrientation(self.robotid)  # Get model position
+                    # basePos_list = [basePos[0], basePos[1], 0.3]
                     # p.resetDebugVisualizerCamera(cameraDistance=1, cameraYaw=75, cameraPitch=-20,
                     #                              cameraTargetPosition=basePos_list)  # fix camera onto model
                     # back view

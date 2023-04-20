@@ -991,12 +991,12 @@ def resiliency_test(model, env, parameters, save_flag, step_num=100, epoisde_tim
 
 if __name__ == '__main__':
     robot_idx = 0
-    # name = 'V%03d_cam' % robot_idx
+    name = 'V%03d_cam' % robot_idx
     # print(name)
-    name = "broken_feet"
+    # name = "broken_feet"
 
     # sin_para = np.loadtxt("traj_optim/dataset/V000_sin_para.csv")
-    sin_para = np.loadtxt("CADandURDF/robot_repo/V000_cam/0.csv")
+    sin_para = np.loadtxt("CADandURDF/robot_repo/%s/0.csv"%name)
     # 1 Collect Data
     # 2 Train VSM
     # 3 Train OV
@@ -1008,13 +1008,12 @@ if __name__ == '__main__':
     RAND_T = True
     RAND_P = True
     print("PROGRAM:", RUN_PROGRAM)
+
     # Data collection
     if RUN_PROGRAM == 1:
         # data collection
         p.connect(p.DIRECT)
         p.setAdditionalSearchPath(pd.getDataPath())
-        # mix2 is the previous action space 0.4,0.2,0.2
-        # mix3 is the constrained action space all 0.2 noise
         GROUND = 'mix0819'
         env = OpticalEnv(name, ground_type='rug', robot_camera=True,
                          urdf_path="../CADandURDF/robot_repo/%s/urdf/%s.urdf" % (name, name),
