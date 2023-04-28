@@ -6,7 +6,7 @@ from CADandURDF.robot_repo.control import *
 
 
 
-def hill_climber(env,para, s_path, epoch_num=5000, step_num_each_epoch=100, num_individual=32):
+def hill_climber(env,para, s_path, epoch_num=5000, step_num_each_epoch=100, num_individual=20):
 
     best_result = - np.inf
     para_batch = [para] * num_individual
@@ -18,7 +18,7 @@ def hill_climber(env,para, s_path, epoch_num=5000, step_num_each_epoch=100, num_
         # Random 16 individuals with specific parameter region.
         para_batch = batch_random_para(para_batch)
         # Random all parameters for the rest 4 robots.
-        for i in range(16, num_individual):
+        for i in range(16, num_individual-1):
             para_batch[i] = rand_para_gss(para_batch[i])
 
         result_list = []
@@ -32,7 +32,7 @@ def hill_climber(env,para, s_path, epoch_num=5000, step_num_each_epoch=100, num_
                 obs = env.reset()
                 last_action = np.zeros(12)
                 for step in range(step_num_each_epoch):
-                    action = sin_move(step, para,debug=False)
+                    action = sin_move(step, para, debug=False)
 
                     # action = np.random.normal(action, 0.2)
 
@@ -40,48 +40,35 @@ def hill_climber(env,para, s_path, epoch_num=5000, step_num_each_epoch=100, num_
                     obs, r, done, info = env.step(action)
                     robo_pos, robot_ori = env.robot_location()
 
-                    # print(robo_pos,robot_ori)
-                    # print(obs[1])
-                    # result +=    obs[1]*50  \
-                    #           - 2*abs(robot_ori[0]) \
-                    #           - 2*abs(robot_ori[1]) \
-                    #           - 5*abs(robo_pos[2]-0.1629)
-
-                    result +=    obs[1]*50  \
-                              - 20*abs(obs[3]) \
-                              - 20*abs(obs[4]) \
-                              - 20*abs(obs[0]) \
-                             - 20 * abs(obs[2])\
-                              - 5*abs(robo_pos[2]-0.1629)
-
-                    # result += np.sum(abs(action - last_action)) - 5*abs(robot_ori[0]) - 5*abs(robot_ori[1]) - 10*abs(robo_pos[2]-0.1629)
-
-                    # print(np.sum(abs(action - last_action)),5*abs(robot_ori[0]),abs(robot_ori[1]),abs(robo_pos[2]-0.1629))
                     last_action = np.copy(action)
 
-                    # result +=  -2*robo_pos[0] - abs(robo_pos[1])
                     # Check the robot position. If it is doing crazy things, abort it.
                     if env.check() == True:
                         fail = True
+                        result =-1000
                         break
 
-                    # if pos[2] < 0.1:
-                    #     # penalty of the stupid gait like wriggle.
-                    #     result *= 0.5
+                    # result +=    obs[1]*50  \
+                    #           - 20*abs(obs[3]) \
+                    #           - 20*abs(obs[4]) \
+                    #           - 20*abs(obs[0]) \
+                    #          - 20 * abs(obs[2])\
+                    #           - 5*abs(robo_pos[2]-0.1629)
+                    result += 2*robo_pos[1] - abs(robo_pos[0]) - 0.5*robot_ori[2]
 
-            if result > best_result:
-                print(epoch, result, best_result)
-                logger_flag = True
-                best_result = result
-                best_para = para
-                # np.savetxt("log%s/%d.csv"%(name,epoch),para)
-                np.savetxt(s_path + "/%d.csv" % epoch, para)
+            result_list.append(result)
 
-            if logger_flag == True:
-                para_batch = np.asarray([best_para] * num_individual)
-                # if best_result > 1000:
-                #     print("good break")
-                #     break
+        # print(result_list)
+        best_id = np.argmax(result_list)
+        best_para = para_batch[best_id]
+        if result_list[best_id] > best_result:
+            best_result = result_list[best_id]
+            print(epoch, best_result)
+            logger_flag = True
+            # np.savetxt("log%s/%d.csv"%(name,epoch),para)
+            np.savetxt(s_path + "/%d.csv" % epoch, best_para)
+        para_batch = np.asarray([best_para] * num_individual)
+
 
 
 # def init_robot_stand_up(cam=True):
@@ -148,26 +135,27 @@ def trajectory_optimization(env,save_path,render_flag = None, para=None, Train=F
 
 
 if __name__ == '__main__':
+    name = 'V500_cam'
+    log_root = "traj_optim/dataset%s/"%name[:4]
+    TRAIN = False
 
-    TRAIN = True
-
-
-    num_channel = 19
-    num_file = 2186
-
-    p.connect(p.DIRECT)
+    num_channel = 6 #6,13
+    p.connect(p.GUI)
     p.setAdditionalSearchPath(pd.getDataPath())
 
-
     noise = 0
-    name = 'V800_cam'
+
     print(name)
     if TRAIN:
-        # sin_para = np.loadtxt("traj_optim/dataset/control_para%d/%d.csv" % (18, 2036))
-        sin_para = np.loadtxt("traj_optim/dataset/0.csv")
+        sin_para = np.loadtxt(log_root +"/control_para%d/%d.csv" % (5, 1364))
+        # sin_para = np.loadtxt(log_root+"/0_%s.csv"%name[:4])
+        # sin_para = np.loadtxt(log_root+"/0_%s.csv"%name[:4])
+
     else:
-        sin_para = np.loadtxt("traj_optim/dataset/control_para%d/%d.csv" % (num_channel, num_file))
-        # sin_para = np.loadtxt("traj_optim/dataset/0.csv")
+        list_dir = os.listdir(log_root + '/control_para%d' % num_channel)
+        sorted_files = sorted(list_dir, key=lambda x: int(x.split('.')[0]))
+        print((sorted_files[-1]))
+        sin_para = np.loadtxt(log_root+'/control_para%d/%s'%(num_channel,sorted_files[-1]))
 
 
     env = OpticalEnv(name,
@@ -180,7 +168,8 @@ if __name__ == '__main__':
     env.data_collection = True
 
     print("NUM_CHANNEL:",num_channel)
-    save_path = "traj_optim/dataset/control_para%d/"%num_channel
+    save_path = log_root+"/control_para%d/"%num_channel
+    print(save_path)
     os.makedirs(save_path,exist_ok=True)
 
     trajectory_optimization(env,

@@ -418,10 +418,9 @@ def test_model(model, env, parameters, save_flag, step_num=100, epoisde_times=10
             # Define Object Function to Compute Rewards
 
             if TASK == "f":
-
-                all_a_rewards = 10 * pred_ns_numpy[:, 1] - 20 * abs(pred_ns_numpy[:, 5]) - 5 * abs(pred_ns_numpy[:, 0])
-                # all_a_rewards = 20 * pred_ns_numpy[:, 1] - 10 * abs(cur_theta + pred_ns_numpy[:, 5]) - 5 * abs(
-                #     cur_p[0] + pred_ns_numpy[:, 0])  # - 5 * abs(pred_ns_numpy[:, 0])
+                # all_a_rewards = 10 * pred_ns_numpy[:, 1] - 20 * abs(pred_ns_numpy[:, 5]) - 5 * abs(pred_ns_numpy[:, 0])
+                all_a_rewards = 20 * pred_ns_numpy[:, 1] - 10 * abs(cur_theta + pred_ns_numpy[:, 5]) - 5 * abs(
+                    cur_p[0] + pred_ns_numpy[:, 0])  # - 5 * abs(pred_ns_numpy[:, 0])
             elif TASK == "l":
                 all_a_rewards = pred_ns_numpy[:,
                                 5]  # - abs(cur_p[1] + pred_ns_numpy[:,1]) - abs(cur_p[0] + pred_ns_numpy[:,0])
@@ -516,7 +515,17 @@ def train_in_sim(env, parameters, data_num, batchsize, train_info, valid_info, l
 
     if pre_trained_model == True:
         model.load_state_dict(torch.load(pre_trained_model_path))
-
+    if freeze_weights == True:
+        for param in model.conv1.parameters():
+            param.requires_grad = False
+        for param in model.layer1.parameters():
+            param.requires_grad = False
+        for param in model.layer2.parameters():
+            param.requires_grad = False
+        for param in model.layer3.parameters():
+            param.requires_grad = False
+        for param in model.layer4.parameters():
+            param.requires_grad = False
     training_L, validation_L = [], []
     min_loss = + np.inf
 
@@ -990,7 +999,7 @@ def resiliency_test(model, env, parameters, save_flag, step_num=100, epoisde_tim
 
 
 if __name__ == '__main__':
-    robot_idx = 0
+    robot_idx = 900
     name = 'V%03d_cam' % robot_idx
     # print(name)
     # name = "broken_feet"
@@ -1003,10 +1012,10 @@ if __name__ == '__main__':
     # 4 Test
     # 5 Res Test
     # 6 Use VO collect data.
-    RUN_PROGRAM = 6
-    RAND_FIRCTION = True
-    RAND_T = True
-    RAND_P = True
+    RUN_PROGRAM = 4
+    RAND_FIRCTION = False
+    RAND_T = False
+    RAND_P = False
     print("PROGRAM:", RUN_PROGRAM)
 
     # Data collection
@@ -1014,7 +1023,7 @@ if __name__ == '__main__':
         # data collection
         p.connect(p.DIRECT)
         p.setAdditionalSearchPath(pd.getDataPath())
-        GROUND = 'mix0819'
+        GROUND = 'mix'
         env = OpticalEnv(name, ground_type='rug', robot_camera=True,
                          urdf_path="../CADandURDF/robot_repo/%s/urdf/%s.urdf" % (name, name),
                          rand_fiction=RAND_FIRCTION,
@@ -1025,17 +1034,15 @@ if __name__ == '__main__':
         env.data_collection = True
         offline_data_path = "C:/visual_project_data/"
         # offline_data_path = "D:/visual_project_data/"
-        start_id = 95
-        start_end = range(start_id, start_id + 5)
-        data_num = 1  #
-        noise = 0.2
+        start_id = 50
+        start_end = range(start_id, start_id + 50)
+        data_num = 1  # Default 1k
+        noise = 0.2 # Default 0.2 Gaussian
         data_type = "%s_n%s_%s/" % (name, str(noise), GROUND)
-        data_logger_folder = offline_data_path + "data_package1/" + data_type
-        # data_logger_folder = offline_data_path + "data_package/60steps/" + data_type
-        try:
-            os.mkdir(data_logger_folder)
-        except OSError:
-            pass
+        # data_logger_folder = offline_data_path + "data_package1/" + data_type #For V000
+        data_logger_folder = offline_data_path + "data_%s/"%name + data_type
+        os.makedirs(data_logger_folder,exist_ok=True)
+
         ground_list = ["grass_rand", "rug_rand", "color_dots", "grid"]
         for pack_idx in start_end:
             select_g = pack_idx % 4
@@ -1055,15 +1062,20 @@ if __name__ == '__main__':
             data_collection(env, steps=int(data_num * 1000), parameters=sin_para, GAUSSIAN=1, noise=noise, save_path=sp)
     # Train VSM or fine-tuning VSM
     elif RUN_PROGRAM == 2:
-        mode_name = "mode103_(res50_broken)"
-        dataset_path = "C:/visual_project_data/data_package1/broken_feet_n0.2_broken/"
+        # mode_name = "mode103_(res50_broken)"
+        mode_name =name
+        # dataset_path = "C:/visual_project_data/visual_project_data/data_V800/V800_cam_n0.2_mix0819/broken_feet_n0.2_broken/"
+        dataset_path = "C:/visual_project_data/data_%s/%s_n0.2_mix/"%(name,name)
+        # scale_coff = np.loadtxt("norm_dataset_V000_cam_n0.2_mix4.csv")
+        scale_coff = np.loadtxt("norm_dataset_%s_n0.2_mix0819.csv"%name)
 
         # mode_name = "mode103_(res50_frozen)"
         # dataset_path = "C:/visual_project_data/data_package1/V000_cam_n0.2_frozen/"
 
         pre_trained_model = True
+        freeze_weights = True
         pre_trained_model_path = "train/mode103/best_model.pt"
-        num_data = 50
+        num_data = 200
         batch_size = 16
         NORM = True
         PRE_A = True
@@ -1072,8 +1084,7 @@ if __name__ == '__main__':
         use_DataLoader = True
         REAL_OUTPUT = False
         ACTIVATED_F = "L"  # Tahn or LeakReLU
-        BLUR_IMG = True
-        scale_coff = np.loadtxt("norm_dataset_V000_cam_n0.2_mix4.csv")
+        BLUR_IMG = False
         num_output = 6
         model = ResNet50(ACTIVATED_F, img_channel=5, num_classes=num_output, input_pre_a=PRE_A, normalization=NORM).to(device)
 
@@ -1083,8 +1094,7 @@ if __name__ == '__main__':
         xx1, xx2 = scale_coff[0], scale_coff[1]
         env = 0
 
-        model_save_path = "train/"
-        log_path = model_save_path + "%s/" % mode_name
+        log_path = "train/%s/" % mode_name
         print(mode_name)
 
         try:
@@ -1133,13 +1143,20 @@ if __name__ == '__main__':
                              scale=NORM)
     # Test VSM
     elif RUN_PROGRAM == 4:
-        p.connect(p.DIRECT)
+        p.connect(p.GUI)
         p.setAdditionalSearchPath(pd.getDataPath())
         GROUND_list = ['rug_rand', 'grid', 'color_dots', 'grass_rand']
         TASK_list = ['f', 'r', 'l', 'b']
-        for i in range(1):
-            for j in range(1):
-                idx_num = 103
+        for i in range(4):
+            for j in range(4):
+                # idx_num = 103
+                idx_num = robot_idx
+                # load_trained_model_path = "train/mode%d/best_model.pt" % idx_num
+
+                # load_trained_model_path = "train/V000_cam/best_model.pt"
+                load_trained_model_path = "train/V%03d_cam/best_model.pt"%idx_num
+
+                scale_coff = np.loadtxt("norm_dataset_V%03d_cam_n0.2_mix.csv"%idx_num)
 
                 GROUND = GROUND_list[i]
                 TASK = TASK_list[j]
@@ -1157,8 +1174,6 @@ if __name__ == '__main__':
                 else:
                     num_output = 6
 
-                load_trained_model_path = "train/mode%d/best_model.pt" % idx_num
-                scale_coff = np.loadtxt("norm_dataset_V000_cam_n0.2_mix4.csv")
                 xx1, xx2 = scale_coff[0], scale_coff[1]
                 from ResNet_RNN import *
 
@@ -1179,20 +1194,13 @@ if __name__ == '__main__':
 
                 env.sleep_time = 0.
                 env.data_collection = True
-                test_log_path = "test/test%d_%s_%s/" % (idx_num, TASK, GROUND)
-
-                try:
-                    os.mkdir(test_log_path)
-                    os.mkdir(test_log_path + "/data/")
-                    # os.mkdir(test_log_path + "/img/")
-                except OSError:
-                    pass
-
+                test_log_path = "test/test%03d/test%03d_%s_%s/" % (idx_num,idx_num, TASK, GROUND)
+                os.makedirs(test_log_path + "/data/",exist_ok=True)
                 test_model(model, env,
-                           epoisde_times=10,
+                           epoisde_times=1,
                            num_traj=50,
                            parameters=sin_para,
-                           noise=0.2,
+                           noise=0.2, #0.2 for V000
                            step_num=56,
                            save_flag=False,
                            input_pre_a=PRE_A)

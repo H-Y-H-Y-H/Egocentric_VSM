@@ -2,15 +2,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # data_path = "data_package/V500_noise0.05/0/NS.csv"
+name = 'V500_cam'
 label = ["dx","dy","dz","r","p","y"]
-mode = "V000_cam_n0.2_mix0810"
-_path ="C:/visual_project_data/data_package1/%s"%mode
+mode = "%s_n0.2_mix0819"%name
+d_path ="C:/visual_project_data/data_%s/%s"%(name,mode)
 
 def norm_scale():
     tem_save = []
     tem_save2 = []
-    for j in range(200):
-        data_path = _path +"/%d/NS.csv"%j
+    for j in range(50):
+        data_path = d_path +"/%d/NS.csv"%j
         data = np.loadtxt(data_path)[:,:6]
         all_mean = np.mean(data,axis=0)
 
@@ -26,10 +27,10 @@ def norm_scale():
 
 def plot_data(scale = False):
 
-    data_path = _path +"/%d/NS.csv"%100
+    data_path = d_path +"/%d/NS.csv"%10
     data = np.loadtxt(data_path)
     for i in range(10):
-        data_path = _path +"/%d/NS.csv"%i
+        data_path = d_path +"/%d/NS.csv"%i
         data = np.vstack((data, np.loadtxt(data_path)))
     for i in range(6):
         if scale == True:
