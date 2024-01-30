@@ -21,11 +21,29 @@ def robo_camera(robotId,camera_link_idx):
     view_matrix = p.computeViewMatrix(com_p, com_p + 1 * camera_vector, up_vector)
     img = p.getCameraImage(240, 240, view_matrix, projection_matrix)
 
-    img = cv2.cvtColor(img[2][:,:,:3], cv2.COLOR_BGR2GRAY)
+    img = cv2.cvtColor(img[2][:, :, :3], cv2.COLOR_BGR2GRAY)
     resized = cv2.resize(img, dim)
 
     return resized
 
+def atlas_camera(robotId,camera_link_idx):
+    # Center of mass position and orientation
+    com_p, com_o, _, _, _, _ = p.getLinkState(robotId, camera_link_idx)
 
+    com_p = np.asarray(com_p)
+    # com_p[1]+=0.07
+    rot_matrix = p.getMatrixFromQuaternion(com_o)
+    rot_matrix = np.array(rot_matrix).reshape(3, 3)
+    # Initial vectors
+    init_camera_vector = (1, 0, 0)
+    init_up_vector = (0, 0, 1)
+    # Rotated vectors
+    camera_vector = rot_matrix.dot(init_camera_vector)
+    up_vector = rot_matrix.dot(init_up_vector)
+    view_matrix = p.computeViewMatrix(com_p, com_p + 1 * camera_vector, up_vector)
+    img = p.getCameraImage(240, 240, view_matrix, projection_matrix)
 
+    img = cv2.cvtColor(img[2][:, :, :3], cv2.COLOR_BGR2GRAY)
+    resized = cv2.resize(img, dim)
 
+    return resized

@@ -2,10 +2,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # data_path = "data_package/V500_noise0.05/0/NS.csv"
-name = 'V500_cam'
+# name = 'V500_cam'
+# label = ["dx","dy","dz","r","p","y"]
+# mode = "%s_n0.2_mix0819"%name
+# d_path ="C:/visual_project_data/data_%s/%s"%(name,mode)
+name = 'atlas'
 label = ["dx","dy","dz","r","p","y"]
-mode = "%s_n0.2_mix0819"%name
-d_path ="C:/visual_project_data/data_%s/%s"%(name,mode)
+mode = "%s_n0.01_rug"%name
+d_path ="/home/ubuntu/Desktop/visual_project_data/data_%s/%s"%(name,mode)
 
 def norm_scale():
     tem_save = []
