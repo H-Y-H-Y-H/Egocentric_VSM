@@ -14,7 +14,7 @@ import pybullet_data as pd
 
 
 if torch.cuda.is_available():
-    device = 'cuda'
+    device = 'cuda:0'
 else:
     device = 'cpu'
 print("start", device)
@@ -176,7 +176,7 @@ class ImgData2(Dataset):
             else:
                 img_pack = np.zeros((5, 128, 128))
 
-            pre_action = torch.zeros(12).to(device, dtype=torch.float)
+            pre_action = torch.zeros(self.all_A.shape[2]).to(device, dtype=torch.float)
 
         else:
             if BLACK_IMAGE == False:
@@ -355,23 +355,11 @@ def test_model(model, env, parameters, save_flag, step_num=100, epoisde_times=10
         cur_p = [0] * 3
         cur_theta = 0
         for step in range(step_num):
-            a = sin_move(step, parameters)
-            A_array = np.asarray([a] * num_traj)
-            scalse_noise = np.asarray([noise,
-                                       noise,
-                                       noise,
-                                       noise,
-                                       noise,
-                                       noise,
-                                       noise,
-                                       noise,
-                                       noise,
-                                       noise,
-                                       noise,
-                                       noise] * num_traj).reshape((num_traj, 12))
+            A_array = np.asarray([parameters] * num_traj)
+            A_array = np.random.normal(loc=A_array, scale=noise)
 
-            A_array = np.random.normal(loc=A_array, scale=scalse_noise, size=None)
-            a = np.clip(A_array, -1, 1)
+            a = move_altas(step, A_array)
+            a = np.concatenate((a,a),axis=1)
 
             if input_pre_a == True:
                 repeat_pre_a = np.asarray([choose_a] * num_traj)
@@ -529,7 +517,7 @@ def train_in_sim(env, parameters, data_num, batchsize, train_info, valid_info, l
             IMGs, As, Ns = batch["image"], batch["A"], batch["NS"]
             if BlACK_ACTION == True:
                 As = torch.zeros_like(As)
-            As = torch.concat((As,As))
+            As = torch.concat((As,As),dim=1)
             pred = model.forward(IMGs, As)
             if REAL_OUTPUT == True:
                 output_d = torch.hstack((Ns[:, :2], Ns[:, 5:]))
@@ -552,7 +540,7 @@ def train_in_sim(env, parameters, data_num, batchsize, train_info, valid_info, l
         with torch.no_grad():
             for i, batch in enumerate(valid_dataloader):
                 IMGs, As, Ns = batch["image"], batch["A"], batch["NS"]
-                As = torch.concat((As, As))
+                As = torch.concat((As,As),dim=1)
                 pred = model.forward(IMGs, As)
                 if REAL_OUTPUT == True:
                     output_d = torch.hstack((Ns[:, :2], Ns[:, 5:]))
@@ -641,7 +629,8 @@ def start_train_model(env, num_data, batch_size=8, lr=1e-1, use_DataLoader=False
         vall_Done = torch.from_numpy(vall_Done).to(device, dtype=torch.float)
         valid_info = [vall_A, vall_NS, vall_Done]
         print("data loaded!")
-        print(vall_A.shape,vall_NS.shape)
+        print(vall_A.shape, vall_NS.shape)
+        print(all_A.shape, all_NS.shape)
         train_L, test_L = train_in_sim(env,
                                        para,
                                        num_data,
@@ -999,7 +988,7 @@ if __name__ == '__main__':
     # 4 Test
     # 5 Res Test
     # 6 Use VO collect data.
-    RUN_PROGRAM = 2
+    RUN_PROGRAM = 4
     RAND_FIRCTION = False
     RAND_T = False
     RAND_P = False
@@ -1008,7 +997,7 @@ if __name__ == '__main__':
     # Data collection
     if RUN_PROGRAM == 1:
         # data collection
-        p.connect(p.GUI)
+        p.connect(p.DIRECT)
         p.setAdditionalSearchPath(pd.getDataPath())
         GROUND = 'rug'
         env = OpticalEnv(name, ground_type='rug', robot_camera=True,
@@ -1020,7 +1009,7 @@ if __name__ == '__main__':
         env.data_collection = True
         offline_data_path = "/home/ubuntu/Desktop/visual_project_data/"
         # offline_data_path = "D:/visual_project_data/"
-        start_id = 10
+        start_id = 39
         print(start_id)
         start_end = range(start_id*5, (start_id +1)*5)
         data_num = 1  # Default 1k
@@ -1049,17 +1038,17 @@ if __name__ == '__main__':
         # mode_name = "mode103_(res50_broken)"
         # dataset_path = "C:/visual_project_data/visual_project_data/data_V800/V800_cam_n0.2_mix0819/broken_feet_n0
         # .2_broken/"
-        dataset_path = "C:/visual_project_data/data_%s/%s_n0.01_rug/"%(name,name)
+        dataset_path = "/home/ubuntu/Desktop/visual_project_data/data_%s/%s_n0.01_rug/"%(name,name)
         # scale_coff = np.loadtxt("norm_dataset_V000_cam_n0.2_mix4.csv")
         scale_coff = np.loadtxt("norm_dataset_%s_n0.01_rug.csv"%name)
 
         # mode_name = "mode103_(res50_frozen)"
         # dataset_path = "C:/visual_project_data/data_package1/V000_cam_n0.2_frozen/"
 
-        pre_trained_model = True
-        freeze_weights = True
+        pre_trained_model = False
+        freeze_weights = False
         pre_trained_model_path = "train/mode103/best_model.pt"
-        num_data = 50 #200
+        num_data = 200 #200
         batch_size = 16
         NORM = True
         PRE_A = True
@@ -1136,15 +1125,15 @@ if __name__ == '__main__':
         for i in range(4):
             for j in range(4):
                 # idx_num = 103
-                idx_num = robot_idx
+                model_name = 'atlas_ndata50_fwFalse'
                 # load_trained_model_path = "train/mode%d/best_model.pt" % idx_num
 
                 # load_trained_model_path = "train/V000_cam/best_model.pt"
-                load_trained_model_path = "train/V%03d_cam/best_model.pt"%idx_num
+                load_trained_model_path = f"train/{model_name}/best_model.pt"
 
-                scale_coff = np.loadtxt("norm_dataset_V%03d_cam_n0.2_mix.csv"%idx_num)
+                scale_coff = np.loadtxt("norm_dataset_%s_n0.01_rug.csv" % name)
 
-                GROUND = GROUND_list[i]
+                GROUND = 'rug'
                 TASK = TASK_list[j]
 
                 NORM = True
@@ -1171,22 +1160,21 @@ if __name__ == '__main__':
                 env = OpticalEnv(name,
                                  robot_camera=True,
                                  camera_capture=False,
-                                 urdf_path="../CADandURDF/robot_repo/%s/urdf/%s.urdf" % (name, name),
+                                 urdf_path="CADandURDF/robot_repo/%s/atlas_v4_l.urdf" % name,
                                  ground_type=GROUND,
                                  rand_fiction=RAND_FIRCTION,
                                  rand_torque=RAND_T,
-                                 rand_pos=RAND_P,
-                                 CONSTRAIN=False)
+                                 rand_pos=RAND_P)
 
                 env.sleep_time = 0.
                 env.data_collection = True
-                test_log_path = "test/test%03d/test%03d_%s_%s/" % (idx_num,idx_num, TASK, GROUND)
+                test_log_path = f"test/{model_name}/test_%s/" % (TASK)
                 os.makedirs(test_log_path + "/data/",exist_ok=True)
                 test_model(model, env,
                            epoisde_times=1,
                            num_traj=50,
-                           parameters=sin_para,
-                           noise=0.2, #0.2 for V000
+                           parameters=para,
+                           noise=0.01, #0.2 for V000
                            step_num=56,
                            save_flag=False,
                            input_pre_a=PRE_A)

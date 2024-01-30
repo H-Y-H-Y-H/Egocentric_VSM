@@ -276,19 +276,28 @@ class OpticalEnv(gym.Env):
         return abort_flag
 
 def move_altas(ti, para,T=3):
-
-    s_action = np.zeros(6)
-
     priode_id = ti % T
-    priode_id_l = (ti + 1 )% T
-    s_action[0] = para[priode_id] #+ para[0] * np.sin(np.pi*2/T+para[2])  # left   hind
-    s_action[1] = 0.6 - s_action[0]
-    s_action[3] = para[priode_id_l] #+ para[0] * np.sin(np.pi*2/T+para[2])
-    s_action[4] = 0.6 - s_action[3]
+    priode_id_l = (ti + 1) % T
 
-    s_action[2] = -s_action[0] - s_action[1]
-    s_action[5] = -s_action[3] - s_action[4]
+    if len(para) == 3:
+        s_action = np.zeros(6)
+        s_action[0] = para[priode_id] #+ para[0] * np.sin(np.pi*2/T+para[2])  # left   hind
+        s_action[1] = 0.6 - s_action[0]
+        s_action[3] = para[priode_id_l] #+ para[0] * np.sin(np.pi*2/T+para[2])
+        s_action[4] = 0.6 - s_action[3]
 
+        s_action[2] = -s_action[0] - s_action[1]
+        s_action[5] = -s_action[3] - s_action[4]
+    else:
+        s_action = np.zeros((len(para),6))
+        s_action[:,0] = para[:,priode_id]
+        s_action[:,1] = 0.6 - s_action[:,0]
+
+        s_action[:,3] = para[:,priode_id_l]  # + para[0] * np.sin(np.pi*2/T+para[2])
+        s_action[:,4] = 0.6 - s_action[:,3]
+
+        s_action[:,2] = -s_action[:,0] - s_action[:,1]
+        s_action[:,5] = -s_action[:,3] - s_action[:,4]
 
     # s_action[0] = para[0] * np.sin(ti*np.pi*2/T+para[2]) + para[4]  # left   hind  #-0.65 +
     # s_action[1] = para[1] * np.sin(ti*np.pi*2/T+para[3])  + para[5]
