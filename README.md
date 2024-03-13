@@ -4,7 +4,7 @@ This repository contains the supplementary materials for the paper "Egocentric V
 
 ## Supplementary Materials
 
-- `EgocentricVSM_SI.pdf`: Detailed supplementary information including source code for the EVSM and related experiments.
+- `EgocentricVSM_SI.pdf`: Detailed supplementary information.
 
 ## Installation
 
@@ -21,13 +21,13 @@ link: [Download Models](https://www.dropbox.com/scl/fo/t8i734kphgv3tl41f39qd/h?r
 )
 
 ## Usage
-Navigate to the project directory and run main.py with the desired mode:
+Navigate to the project directory and run main.py with the following mode:
 
 1: Collect Data in the simulation.
 
 2: Train the Egocentric Visual Self-Model.
 
-3: Train Visual Odometry (VO) Model.
+3: Train the Visual Odometry (VO) Model.
 
 4: Test the Egocentric Visual Self-Model
 
