@@ -353,7 +353,7 @@ def test_model(model, env, parameters, save_flag, step_num=100, epoisde_times=10
         IMGs = torch.from_numpy(initial_img.astype(np.float32)).to(device)
         choose_a = [0] * 12
         cur_p = [0] * 3
-        cur_theta = 0
+        cur_theta = np.pi/2
         for step in range(step_num):
             A_array = np.asarray([parameters] * num_traj)
             A_array = np.random.normal(loc=A_array, scale=noise)
@@ -394,14 +394,16 @@ def test_model(model, env, parameters, save_flag, step_num=100, epoisde_times=10
 
             if TASK == "f":
                 # all_a_rewards = 10 * pred_ns_numpy[:, 1] - 20 * abs(pred_ns_numpy[:, 5]) - 5 * abs(pred_ns_numpy[:, 0])
-                all_a_rewards = 20 * pred_ns_numpy[:, 1] - 10 * abs(cur_theta + pred_ns_numpy[:, 5]) - 5 * abs(
-                    cur_p[0] + pred_ns_numpy[:, 0])  # - 5 * abs(pred_ns_numpy[:, 0])
-            elif TASK == "l":
-                all_a_rewards = pred_ns_numpy[:,
-                                5]  # - abs(cur_p[1] + pred_ns_numpy[:,1]) - abs(cur_p[0] + pred_ns_numpy[:,0])
+                all_a_rewards = 10 * pred_ns_numpy[:, 1] - 20 * abs(cur_theta + pred_ns_numpy[:, 5] - np.pi/2 ) #- 20 * abs(pred_ns_numpy[:, 5]) - 5 * abs(pred_ns_numpy[:, 0])
+                # all_a_rewards = 20 * pred_ns_numpy[:, 1] - 10 * abs(cur_theta + pred_ns_numpy[:, 5]) - 5 * abs(
+                #     cur_p[0] + pred_ns_numpy[:, 0])  # - 5 * abs(pred_ns_numpy[:, 0])
             elif TASK == "r":
-                all_a_rewards = -pred_ns_numpy[:,
-                                 5]  # - abs(cur_p[1] + pred_ns_numpy[:,1]) - abs(cur_p[0] + pred_ns_numpy[:,0])
+                all_a_rewards = -pred_ns_numpy[:, 5]
+                # - abs(cur_p[1] + pred_ns_numpy[:,1]) - abs(cur_p[0] + pred_ns_numpy[:,0])
+            elif TASK == "l":
+                all_a_rewards = pred_ns_numpy[:, 5]
+                # - abs(cur_p[1] + pred_ns_numpy[:,1]) - abs(cur_p[0] + pred_ns_numpy[:,0])
+
             elif TASK == "stop":
                 all_a_rewards = 10 - abs(pred_ns_numpy[:, 1]) - abs(pred_ns_numpy[:, 0])
             elif TASK == "move_r":
@@ -410,7 +412,10 @@ def test_model(model, env, parameters, save_flag, step_num=100, epoisde_times=10
                 all_a_rewards = -10 * pred_ns_numpy[:, 1]
             else:
                 all_a_rewards = np.zeros(num_traj)
-            greedy_select = int(np.argmax(all_a_rewards))
+
+            greedy_select = 0
+            # greedy_select = int(np.argmax(all_a_rewards))
+
             # prob_select = random.choices(range(num_traj), weights=all_a_rewards, k=1)
             # greedy_select= prob_select[0]
             # all_a_rewards = -np.abs(pred_ns_numpy[:,5])- np.abs(pred_ns_numpy[:,3])
@@ -457,13 +462,14 @@ def test_model(model, env, parameters, save_flag, step_num=100, epoisde_times=10
                 log_done.append(0)
 
         log_results.append(real_reward)
-
-    np.savetxt(test_log_path + '/data/pred.csv', np.asarray(log_pred))
-    np.savetxt(test_log_path + '/data/gt.csv', np.asarray(log_gt))
-    np.savetxt(test_log_path + '/data/done.csv', np.asarray(log_done))
-    np.savetxt(test_log_path + '/data/rob_pos_ori.csv', np.asarray(rob_pos_ori))
-    if LOG_A == True:
-        np.savetxt(test_log_path + '/data/log_action.csv', np.asarray(log_action))
+        test_log_path_epoch = test_log_path + '/data_%d'%epoch
+        os.makedirs(test_log_path_epoch,exist_ok=True)
+        np.savetxt(test_log_path_epoch + '/pred.csv', np.asarray(log_pred))
+        np.savetxt(test_log_path_epoch + '/gt.csv', np.asarray(log_gt))
+        np.savetxt(test_log_path_epoch + '/done.csv', np.asarray(log_done))
+        np.savetxt(test_log_path_epoch + '/rob_pos_ori.csv', np.asarray(rob_pos_ori))
+        if LOG_A == True:
+            np.savetxt(test_log_path_epoch + '/log_action.csv', np.asarray(log_action))
 
     result_mean = np.mean(log_results)
     result_std = np.std(log_results)
@@ -982,6 +988,8 @@ if __name__ == '__main__':
     # name = "broken_feet"
 
     para = np.loadtxt("CADandURDF/robot_repo/%s/control_para.csv"%name)
+    # offline_data_path = "/home/ubuntu/Desktop/visual_project_data/"
+    offline_data_path = "C:/Users/yuhan/PycharmProjects/visual_project_data/"
     # 1 Collect Data
     # 2 Train VSM
     # 3 Train OV
@@ -998,6 +1006,7 @@ if __name__ == '__main__':
     if RUN_PROGRAM == 1:
         # data collection
         p.connect(p.DIRECT)
+        p.configureDebugVisualizer(rgbBackground=[0, 0, 0])
         p.setAdditionalSearchPath(pd.getDataPath())
         GROUND = 'rug'
         env = OpticalEnv(name, ground_type='rug', robot_camera=True,
@@ -1007,11 +1016,10 @@ if __name__ == '__main__':
                          rand_pos=False)
         env.sleep_time = 0
         env.data_collection = True
-        offline_data_path = "/home/ubuntu/Desktop/visual_project_data/"
         # offline_data_path = "D:/visual_project_data/"
-        start_id = 39
+        start_id = 29
         print(start_id)
-        start_end = range(start_id*5, (start_id +1)*5)
+        start_end = range(start_id*10, (start_id +1)*10)
         data_num = 1  # Default 1k
         noise = 0.01 # Default 0.2 Gaussian
         data_type = "%s_n%s_%s/" % (name, str(noise), GROUND)
@@ -1038,7 +1046,7 @@ if __name__ == '__main__':
         # mode_name = "mode103_(res50_broken)"
         # dataset_path = "C:/visual_project_data/visual_project_data/data_V800/V800_cam_n0.2_mix0819/broken_feet_n0
         # .2_broken/"
-        dataset_path = "/home/ubuntu/Desktop/visual_project_data/data_%s/%s_n0.01_rug/"%(name,name)
+        dataset_path = offline_data_path+"/data_%s/%s_n0.01_rug/"%(name,name)
         # scale_coff = np.loadtxt("norm_dataset_V000_cam_n0.2_mix4.csv")
         scale_coff = np.loadtxt("norm_dataset_%s_n0.01_rug.csv"%name)
 
@@ -1047,8 +1055,10 @@ if __name__ == '__main__':
 
         pre_trained_model = False
         freeze_weights = False
-        pre_trained_model_path = "train/mode103/best_model.pt"
-        num_data = 200 #200
+        # pre_trained_model_path = "train/mode103/best_model.pt"
+        pre_trained_model_path = "train/atlas_ndata300/best_model.pt"
+
+        num_data = 300 #200
         batch_size = 16
         NORM = True
         PRE_A = True
@@ -1067,7 +1077,8 @@ if __name__ == '__main__':
         xx1, xx2 = scale_coff[0], scale_coff[1]
         env = 0
 
-        mode_name = name+f'_ndata{num_data}_fw{freeze_weights}'
+        # mode_name = name+f'_ndata{num_data}_fw{freeze_weights}'
+        mode_name = name+f'_ndata1{num_data}'
 
         log_path = "train/%s/" % mode_name
         print(mode_name)
@@ -1118,14 +1129,17 @@ if __name__ == '__main__':
                              scale=NORM)
     # Test VSM
     elif RUN_PROGRAM == 4:
-        p.connect(p.GUI)
+        p.connect(p.DIRECT)
+        p.configureDebugVisualizer(rgbBackground=[0, 0, 0])
+        p.resetDebugVisualizerCamera(cameraDistance=4, cameraYaw=120, cameraPitch=-30,cameraTargetPosition=[0, 1, 0])  # fix camera onto model
+
         p.setAdditionalSearchPath(pd.getDataPath())
         GROUND_list = ['rug_rand', 'grid', 'color_dots', 'grass_rand']
         TASK_list = ['f', 'r', 'l', 'b']
-        for i in range(4):
-            for j in range(4):
+        for i in range(1):
+            for j in range(2,3):
                 # idx_num = 103
-                model_name = 'atlas_ndata50_fwFalse'
+                model_name = 'atlas_ndata200_fwFalse'
                 # load_trained_model_path = "train/mode%d/best_model.pt" % idx_num
 
                 # load_trained_model_path = "train/V000_cam/best_model.pt"
@@ -1138,7 +1152,7 @@ if __name__ == '__main__':
 
                 NORM = True
                 PRE_A = True
-                BLACK_IMAGE = False
+                BLACK_IMAGE = True
                 BlACK_ACTION = False
                 REAL_OUTPUT = False
                 OPERATE = False
@@ -1168,14 +1182,16 @@ if __name__ == '__main__':
 
                 env.sleep_time = 0.
                 env.data_collection = True
-                test_log_path = f"test/{model_name}/test_%s/" % (TASK)
+                # test_log_path = f"test/{model_name}/test_%s/" % (TASK)
+                test_log_path = f"test/Gait_Gen/test_%s/" % (TASK)
+
                 os.makedirs(test_log_path + "/data/",exist_ok=True)
                 test_model(model, env,
-                           epoisde_times=1,
-                           num_traj=50,
+                           epoisde_times=3,
+                           num_traj=100,
                            parameters=para,
-                           noise=0.01, #0.2 for V000
-                           step_num=56,
+                           noise=0.008, #0.2 for V000
+                           step_num=200,
                            save_flag=False,
                            input_pre_a=PRE_A)
 

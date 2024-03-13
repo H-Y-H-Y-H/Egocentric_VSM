@@ -2,8 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import pearsonr
 
-folder_name = '../res_test/broken_feet/'
-sub_folder_name ="test103_f_rug_rand/"
+folder_name = '../res_test//'
+sub_folder_name ="test103_(res10_broken)_f_rug_rand/"
 
 
 def plot_curve(pred,gt,vo_result,id_name):
