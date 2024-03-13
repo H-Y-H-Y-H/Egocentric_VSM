@@ -2,23 +2,47 @@
 
 This repository contains the supplementary materials for the paper "Egocentric Visual Self-Modeling for Autonomous Robot Dynamics Prediction and Adaptation".
 
+## Supplementary Materials
 
-## Repository Structure
-- `supplementary_materials.pdf`: Contains the source code for the egocentric visual self-model and related experiments
-- `code/`: Contains the source code for the egocentric visual self-model and related experiments
-  - `simulation/`: Code for running experiments in simulation
-  - `real_world/`: Code for running experiments on real-world robots
-- `data/`: Contains the datasets used in the experiments
-  - `simulation/`: Datasets for simulation experiments
-  - `real_world/`: Datasets for real-world experiments
-- `models/`: Pre-trained models for the egocentric visual self-model
-- `figures/`: Figures and visualizations used in the paper
-- `videos/`: Supplementary videos demonstrating the experiments
+- `EgocentricVSM_SI.pdf`: Detailed supplementary information including source code for the EVSM and related experiments.
 
-## Requirements
-- [List the main dependencies and their versions]
+## Installation
+
+Ensure you have Python installed on your system, and then install the dependencies specified in `requirements.txt`.
+
+```
+pip install -r requirements.txt
+```
+
+## Trained Models
+Access our pre-trained models, including the standard robot model, the damaged robot model, 
+and the Visual Odometry (VO) model, through the following 
+link: [Download Models](https://www.dropbox.com/scl/fo/t8i734kphgv3tl41f39qd/h?rlkey=grxtf5yqa17o75b1hhr8dlj08&dl=0
+)
 
 ## Usage
-1. Clone the repository.
-2. Install the required dependencies
-3. [Provide instructions on how to run the code and reproduce the experiments]
+Navigate to the project directory and run main.py with the desired mode:
+
+1: Collect Data in the simulation.
+
+2: Train the Egocentric Visual Self-Model.
+
+3: Train Visual Odometry (VO) Model.
+
+4: Test the Egocentric Visual Self-Model
+
+5: Recovery Test
+
+6: Use VO to collect data
+
+
+## Citation
+If you find our work useful in your research, please consider citing:
+
+@article{hu2023self,
+  title={Self-supervised robot self-modeling using a single egocentric camera},
+  author={Hu, Yuhang and Chen, Boyuan and Lipson, Hod},
+  year={2023}
+}
+
+
